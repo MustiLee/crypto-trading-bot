@@ -1,0 +1,47 @@
+# Realistic Strategy 3 - EMA trend following with moderate filters
+# Uses trend filter but with shorter EMA
+
+bollinger:
+  length: 20      
+  std: 2.1        # Moderate bands
+
+macd:
+  fast: 10        # Balanced MACD
+  slow: 24        
+  signal: 9
+
+rsi:
+  length: 14
+  use_filter: true
+  rsi_buy_max: 45.0   # Moderate oversold
+  rsi_sell_min: 55.0  # Moderate overbought
+
+filters:
+  ema_trend:
+    use: true
+    length: 50      # Shorter trend filter (instead of 200)
+    mode: "long_only_above"
+
+execution:
+  touch_tolerance_pct: 0.0015  
+  slippage_pct: 0.0005       
+  fee_pct: 0.0004            
+
+risk:
+  use_atr: true
+  atr_length: 14
+  stop_mult: 1.8     # Balanced stops
+  trail_mult: 2.2    
+
+exits:
+  time_based:
+    use: true
+    max_bars_in_trade: 80  
+  midband_exit:
+    use: false  # Let winners run
+
+backtest:
+  initial_cash: 10000.0
+  size_pct: 0.92     # Conservative position sizing
+  allow_short: false
+  plot: true

@@ -1,0 +1,47 @@
+# Realistic Strategy 1 - Basic BB+MACD with light RSI filter
+# Similar to default but with minor enhancements
+
+bollinger:
+  length: 20      # Standard BB period
+  std: 2.0        # Standard bands
+
+macd:
+  fast: 12        # Standard MACD
+  slow: 26        
+  signal: 9
+
+rsi:
+  length: 14
+  use_filter: true
+  rsi_buy_max: 50.0   # Light filter - only avoid extreme overbought buys
+  rsi_sell_min: 50.0  # Light filter - only avoid extreme oversold sells
+
+filters:
+  ema_trend:
+    use: false      # No trend filter to allow more signals
+    length: 200
+    mode: "long_only_above"
+
+execution:
+  touch_tolerance_pct: 0.001  # Small tolerance
+  slippage_pct: 0.0005       
+  fee_pct: 0.0004            
+
+risk:
+  use_atr: true
+  atr_length: 14
+  stop_mult: 2.0     # Wider stops to avoid early exits
+  trail_mult: 2.5    # Wider trailing
+
+exits:
+  time_based:
+    use: true
+    max_bars_in_trade: 100  # Longer holding period
+  midband_exit:
+    use: false  # Disable to let trades run
+
+backtest:
+  initial_cash: 10000.0
+  size_pct: 0.95     
+  allow_short: false
+  plot: true

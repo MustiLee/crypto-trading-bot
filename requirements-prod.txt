@@ -1,0 +1,18 @@
+# Production-only dependencies (no dev tools)
+ccxt==4.5.2
+pandas==2.3.2
+numpy==1.26.4
+pandas-ta==0.3.14b
+vectorbt==0.28.1
+python-dotenv==1.1.1
+matplotlib==3.10.6
+typer==0.17.3
+pydantic==2.11.7
+loguru==0.7.3
+pyyaml==6.0.2
+# PostgreSQL dependencies
+psycopg2-binary==2.9.10
+sqlalchemy==2.0.34
+fastapi==0.115.6
+uvicorn==0.29.0
+websockets==13.1

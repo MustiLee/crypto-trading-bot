@@ -1,0 +1,47 @@
+# Realistic Strategy 2 - Faster MACD with loose filters
+# More sensitive to market movements
+
+bollinger:
+  length: 20      
+  std: 1.8        # Tighter bands for more signals
+
+macd:
+  fast: 8         # Faster MACD for quicker signals
+  slow: 21        
+  signal: 9
+
+rsi:
+  length: 14
+  use_filter: true
+  rsi_buy_max: 60.0   # More permissive
+  rsi_sell_min: 40.0  # More permissive
+
+filters:
+  ema_trend:
+    use: false      # No trend filter
+    length: 200
+    mode: "long_only_above"
+
+execution:
+  touch_tolerance_pct: 0.002  # More tolerance for touches
+  slippage_pct: 0.0005       
+  fee_pct: 0.0004            
+
+risk:
+  use_atr: true
+  atr_length: 14
+  stop_mult: 1.5     # Tighter stops for active management
+  trail_mult: 2.0    
+
+exits:
+  time_based:
+    use: true
+    max_bars_in_trade: 60  # Moderate holding period
+  midband_exit:
+    use: true   # Exit at midband for profit taking
+
+backtest:
+  initial_cash: 10000.0
+  size_pct: 0.98     
+  allow_short: false
+  plot: true

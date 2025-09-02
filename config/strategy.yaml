@@ -1,0 +1,25 @@
+bollinger:
+  length: 20
+  std: 2.3    # More sensitive bands
+
+macd:
+  fast: 8     # Faster MACD for more signals
+  slow: 21
+  signal: 5
+
+rsi:
+  length: 14
+  use_filter: false
+  rsi_buy_max: 35
+  rsi_sell_min: 65
+
+execution:
+  touch_tolerance_pct: 0.005   # 0.5% tolerance for touches
+  slippage_pct: 0.0005
+  fee_pct: 0.0004
+
+backtest:
+  initial_cash: 10000
+  size_pct: 0.99
+  allow_short: false
+  plot: true

@@ -1,0 +1,3 @@
+# Data directory
+# CSV files are no longer used - data is stored in PostgreSQL database
+# This directory is kept for potential future file-based operations

@@ -1,0 +1,47 @@
+# Aggressive Strategy Profile - Higher frequency, range-friendly
+# Bollinger Bands + MACD crossover without trend filter
+
+bollinger:
+  length: 20      # Standard BB period
+  std: 2.0        # Tighter bands for more signals
+
+macd:
+  fast: 8         # Faster MACD for quicker signals
+  slow: 21        # Faster MACD for quicker signals
+  signal: 9
+
+rsi:
+  length: 14
+  use_filter: false  # No RSI filter - more aggressive
+  rsi_buy_max: 40.0  # Not used when filter disabled
+  rsi_sell_min: 60.0 # Not used when filter disabled
+
+filters:
+  ema_trend:
+    use: false      # No trend filter - trade in all conditions
+    length: 200
+    mode: "long_only_above"
+
+execution:
+  touch_tolerance_pct: 0.0    # Exact touches only
+  slippage_pct: 0.0005       # Standard slippage
+  fee_pct: 0.0004            # Standard fee estimate
+
+risk:
+  use_atr: true
+  atr_length: 14
+  stop_mult: 1.2     # Tight stops (1.2x ATR)
+  trail_mult: 1.8    # Tight trailing stops
+
+exits:
+  time_based:
+    use: true
+    max_bars_in_trade: 40  # Shorter holding period
+  midband_exit:
+    use: true  # Exit at midband for quick profits
+
+backtest:
+  initial_cash: 10000.0
+  size_pct: 0.95     # Use 95% of capital - aggressive sizing
+  allow_short: false
+  plot: true

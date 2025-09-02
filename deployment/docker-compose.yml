@@ -1,0 +1,95 @@
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: trader-postgres
+    environment:
+      POSTGRES_DB: trader_db
+      POSTGRES_USER: trader
+      POSTGRES_PASSWORD: trader_password
+      POSTGRES_HOST_AUTH_METHOD: trust
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
+    ports:
+      - "5433:5432"  # Use different port to avoid conflict with host PostgreSQL
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U trader -d trader_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # Trading Bot Web Dashboard
+  trader-app:
+    build: 
+      context: ..
+      dockerfile: deployment/Dockerfile
+    image: trader-bot:latest
+    container_name: trader-dashboard
+    environment:
+      # Database configuration
+      DATABASE_URL: postgresql://trader:trader_password@postgres:5432/trader_db
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: trader_db
+      POSTGRES_USER: trader
+      POSTGRES_PASSWORD: trader_password
+      
+      # Application configuration
+      SYMBOL: BTCUSDT
+      TIMEFRAME: 5m
+      STRATEGY: Realistic1
+      
+      # Web server configuration
+      HOST: 0.0.0.0
+      PORT: 8000
+      
+      # Python configuration
+      PYTHONPATH: /app
+      PYTHONUNBUFFERED: 1
+      TZ: UTC
+    ports:
+      - "8000:8000"
+    volumes:
+      - ../data:/app/data
+      - ../reports:/app/reports
+      - ../config:/app/config:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    entrypoint: ["python"]
+    command: ["/app/scripts/run_live_dashboard.py"]
+
+  # Optional: CLI Bot for manual operations
+  bot:
+    build: 
+      context: ..
+      dockerfile: deployment/Dockerfile
+    image: trader-bot:latest
+    container_name: trader-bot
+    working_dir: /app
+    environment:
+      - TZ=UTC
+      - DATABASE_URL=postgresql://trader:trader_password@postgres:5432/trader_db
+    volumes:
+      - ../data:/app/data
+      - ../reports:/app/reports
+      - ../config:/app/config:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+    entrypoint: ["python", "-m", "src.cli"]
+    command: ["--help"]
+    profiles:
+      - cli  # Only start with: docker-compose --profile cli up
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  default:
+    name: trader-network

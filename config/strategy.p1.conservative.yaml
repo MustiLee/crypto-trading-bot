@@ -1,0 +1,47 @@
+# Conservative Strategy Profile - Lower risk parameters
+# Bollinger Bands + MACD crossover with RSI filter
+
+bollinger:
+  length: 25      # Longer period for smoother BB
+  std: 2.5        # Wider bands to reduce false signals
+
+macd:
+  fast: 12
+  slow: 26
+  signal: 9
+
+rsi:
+  length: 14
+  use_filter: true
+  rsi_buy_max: 35.0   # Only buy when RSI < 35 (oversold)
+  rsi_sell_min: 65.0  # Only sell when RSI > 65 (overbought)
+
+filters:
+  ema_trend:
+    use: true
+    length: 200
+    mode: "long_only_above"  # Only long trades when price > EMA200
+
+execution:
+  touch_tolerance_pct: 0.002  # 0.2% tolerance for BB touches
+  slippage_pct: 0.0008       # Higher slippage for conservative estimates
+  fee_pct: 0.0005            # Conservative fee estimate
+
+risk:
+  use_atr: true
+  atr_length: 14
+  stop_mult: 1.2     # Tighter stops (1.2x ATR)
+  trail_mult: 2.5    # Wider trailing stops
+
+exits:
+  time_based:
+    use: true
+    max_bars_in_trade: 48  # Exit after 48 periods if no signal
+  midband_exit:
+    use: true  # Exit longs at BB midband
+
+backtest:
+  initial_cash: 10000.0
+  size_pct: 0.80     # Use 80% of capital (more conservative)
+  allow_short: false
+  plot: true
