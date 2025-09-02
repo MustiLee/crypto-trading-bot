@@ -48,7 +48,8 @@
       "Bash(cd:*)",
       "Bash(docker exec:*)",
       "Bash(docker cp:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ],
     "deny": [],
     "ask": []
