@@ -47,6 +47,10 @@ class LiveSignalGenerator:
         self.last_signal = SignalType.NEUTRAL
         self.last_signal_time = None
         
+        # Current indicators for dashboard
+        self.latest_indicators = {}
+        self.current_signal = SignalType.NEUTRAL
+        
         # Signal history
         self.signal_history: List[Dict] = []
         
@@ -144,9 +148,9 @@ class LiveSignalGenerator:
             # Step 7: Add callback for new data
             self.stream.add_callback(self._on_new_kline)
             
-            # Step 8: Start real-time stream
-            logger.info("Starting real-time data stream...")
-            await self.stream.connect()
+            # Step 8: Stream connection will be managed by the multi-symbol dashboard
+            logger.info("Live signal generator initialization completed")
+            # Note: Real-time stream connection is handled by MultiSymbolTradingDashboard
             
         except Exception as e:
             logger.error(f"Failed to initialize live signal generator: {e}")
@@ -259,7 +263,7 @@ class LiveSignalGenerator:
                             'atr': float(row.get('ATR')) if pd.notna(row.get('ATR')) else None
                         }
                         
-                        self.db.save_indicators(candle['market_data_id'], indicators)
+                        self.db.save_indicators(self.symbol, candle['market_data_id'], indicators)
                 
                 logger.info(f"💾 Saved indicators for {len(candles)} candles to database")
             else:
@@ -288,8 +292,19 @@ class LiveSignalGenerator:
             # Check for new signal
             await self._check_new_signals(buy_signals, sell_signals, df_with_indicators)
             
-            # Log indicator update
+            # Update latest indicators for dashboard
             latest_row = df_with_indicators.iloc[-1]
+            self.latest_indicators = {
+                'RSI': float(latest_row.get('RSI')) if pd.notna(latest_row.get('RSI')) else 0,
+                'MACD': float(latest_row.get('MACD')) if pd.notna(latest_row.get('MACD')) else 0,
+                'MACD_SIGNAL': float(latest_row.get('MACD_SIGNAL')) if pd.notna(latest_row.get('MACD_SIGNAL')) else 0,
+                'BBU': float(latest_row.get('BBU')) if pd.notna(latest_row.get('BBU')) else 0,
+                'BBL': float(latest_row.get('BBL')) if pd.notna(latest_row.get('BBL')) else 0,
+                'BBM': float(latest_row.get('BBM')) if pd.notna(latest_row.get('BBM')) else 0,
+                'ATR': float(latest_row.get('ATR')) if pd.notna(latest_row.get('ATR')) else 0
+            }
+            
+            # Log indicator update
             rsi_val = latest_row.get('RSI')
             macd_val = latest_row.get('MACD')
             rsi_str = f"{rsi_val:.1f}" if pd.notna(rsi_val) else "N/A"
@@ -321,8 +336,19 @@ class LiveSignalGenerator:
             # Check for new signal
             await self._check_new_signals(buy_signals, sell_signals, df_with_indicators)
             
-            # Log indicator update
+            # Update latest indicators for dashboard
             latest_row = df_with_indicators.iloc[-1]
+            self.latest_indicators = {
+                'RSI': float(latest_row.get('RSI')) if pd.notna(latest_row.get('RSI')) else 0,
+                'MACD': float(latest_row.get('MACD')) if pd.notna(latest_row.get('MACD')) else 0,
+                'MACD_SIGNAL': float(latest_row.get('MACD_SIGNAL')) if pd.notna(latest_row.get('MACD_SIGNAL')) else 0,
+                'BBU': float(latest_row.get('BBU')) if pd.notna(latest_row.get('BBU')) else 0,
+                'BBL': float(latest_row.get('BBL')) if pd.notna(latest_row.get('BBL')) else 0,
+                'BBM': float(latest_row.get('BBM')) if pd.notna(latest_row.get('BBM')) else 0,
+                'ATR': float(latest_row.get('ATR')) if pd.notna(latest_row.get('ATR')) else 0
+            }
+            
+            # Log indicator update
             # Format indicator values safely
             rsi_val = latest_row.get('RSI')
             macd_val = latest_row.get('MACD')
@@ -361,6 +387,11 @@ class LiveSignalGenerator:
             if self.strategy.risk.use_atr:
                 atr = df.ta.atr(length=self.strategy.risk.atr_length)
             
+            # Calculate EMA if needed for trend filter
+            ema_trend = None
+            if hasattr(self.strategy, 'filters') and hasattr(self.strategy.filters, 'ema_trend') and self.strategy.filters.ema_trend.use:
+                ema_trend = df.ta.ema(length=self.strategy.filters.ema_trend.length)
+            
             # Combine all indicators
             result = df.copy()
             
@@ -394,6 +425,9 @@ class LiveSignalGenerator:
                 
             if atr is not None:
                 result['ATR'] = atr
+            
+            if ema_trend is not None:
+                result['EMA_TREND'] = ema_trend
             
             # Remove NaN values
             result = result.dropna()
@@ -443,6 +477,7 @@ class LiveSignalGenerator:
                 
                 # Store signal
                 self.last_signal = new_signal
+                self.current_signal = new_signal  # Update current signal for dashboard
                 self.last_signal_time = latest_timestamp
                 self.signal_history.insert(0, signal_data)  # Add to beginning
                 

@@ -1,0 +1,48 @@
+# XRP Optimized Strategy - Tuned for Ripple's unique characteristics
+# XRP tends to have sharp moves followed by consolidation, different from BTC/ETH
+
+bollinger:
+  length: 22      # Longer for XRP's consolidation periods
+  std: 2.5        # Wider bands for XRP's explosive moves
+
+macd:
+  fast: 8         # Very fast for catching XRP's sharp moves
+  slow: 21        
+  signal: 6       # Quick signal line
+
+rsi:
+  length: 10      # Short RSI for XRP's quick reversals
+  use_filter: true
+  rsi_buy_max: 40.0   # Very restrictive - XRP can reverse quickly
+  rsi_sell_min: 60.0  # Asymmetric for XRP's pump characteristics
+
+filters:
+  ema_trend:
+    use: false      # Disable trend filter - XRP can move against trend
+    length: 50
+    mode: "long_only_above"
+
+execution:
+  touch_tolerance_pct: 0.002   # Higher tolerance for XRP's volatility
+  slippage_pct: 0.001          # Higher slippage expectation
+  fee_pct: 0.0004            
+
+risk:
+  use_atr: true
+  atr_length: 10     # Very short ATR for XRP's quick moves
+  stop_mult: 1.8     # Tight stops - XRP can reverse fast
+  trail_mult: 2.2    # Quick trailing stops
+
+exits:
+  time_based:
+    use: true
+    max_bars_in_trade: 60   # Short holding - XRP moves quickly
+  midband_exit:
+    use: true    # Quick exits on midband
+    pct_through: 0.3  # Exit early on XRP
+
+backtest:
+  initial_cash: 10000.0
+  size_pct: 0.85     # More conservative - XRP is riskier
+  allow_short: false
+  plot: true

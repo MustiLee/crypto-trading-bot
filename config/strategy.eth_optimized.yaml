@@ -1,0 +1,48 @@
+# ETH Optimized Strategy - Tuned for Ethereum volatility patterns
+# ETH tends to have stronger momentum moves and different volatility patterns than BTC
+
+bollinger:
+  length: 18      # Slightly shorter for ETH's faster movements
+  std: 2.2        # Wider bands for ETH's higher volatility
+
+macd:
+  fast: 10        # Faster settings for ETH
+  slow: 24        
+  signal: 8
+
+rsi:
+  length: 12      # Shorter RSI for more responsive signals
+  use_filter: true
+  rsi_buy_max: 45.0   # More restrictive for ETH
+  rsi_sell_min: 55.0  # Asymmetric for ETH's tendency to trend
+
+filters:
+  ema_trend:
+    use: true       # Enable trend filter for ETH
+    length: 100     # Shorter than BTC for faster trend changes
+    mode: "long_only_above"
+
+execution:
+  touch_tolerance_pct: 0.0015  # Higher tolerance for ETH volatility
+  slippage_pct: 0.0008       
+  fee_pct: 0.0004            
+
+risk:
+  use_atr: true
+  atr_length: 12     # Shorter ATR for more responsive stops
+  stop_mult: 2.2     # Tighter stops for ETH's momentum
+  trail_mult: 2.8    # Tighter trailing for faster moves
+
+exits:
+  time_based:
+    use: true
+    max_bars_in_trade: 80   # Shorter holding for ETH
+  midband_exit:
+    use: true    # Enable midband exits for ETH
+    pct_through: 0.5
+
+backtest:
+  initial_cash: 10000.0
+  size_pct: 0.90     # Slightly more conservative
+  allow_short: false
+  plot: true

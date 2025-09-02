@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 from src.strategy.rules import lower_touch, upper_touch
 from src.strategy.bb_macd_strategy import build_signals
-from src.utils.config import StrategyConfig, BollingerConfig, MACDConfig, RSIConfig, ExecutionConfig
+from utils.configEX import StrategyConfig, BollingerConfig, MACDConfig, RSIConfig, ExecutionConfig
 
 
 class TestSignalRules:

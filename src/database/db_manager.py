@@ -103,10 +103,11 @@ class TradingDBManager:
             logger.error(f"Error saving market data: {e}")
             return False
     
-    def save_indicators(self, market_data_id: int, indicators: Dict) -> bool:
+    def save_indicators(self, symbol: str, market_data_id: int, indicators: Dict) -> bool:
         """
         Save technical indicators to database
         Args:
+            symbol: Trading symbol (e.g., 'BTCUSDT')
             market_data_id: Reference to market_data record
             indicators: Dictionary of indicator values
         """
@@ -115,11 +116,12 @@ class TradingDBManager:
                 with conn.cursor() as cursor:
                     cursor.execute("""
                         INSERT INTO indicators 
-                        (market_data_id, rsi, macd, macd_signal, macd_histogram, bb_upper, bb_middle, bb_lower, atr)
-                        VALUES (%(market_data_id)s, %(rsi)s, %(macd)s, %(macd_signal)s, %(macd_histogram)s, 
+                        (symbol, market_data_id, rsi, macd, macd_signal, macd_histogram, bb_upper, bb_middle, bb_lower, atr)
+                        VALUES (%(symbol)s, %(market_data_id)s, %(rsi)s, %(macd)s, %(macd_signal)s, %(macd_histogram)s, 
                                %(bb_upper)s, %(bb_middle)s, %(bb_lower)s, %(atr)s)
                         ON CONFLICT (market_data_id) 
                         DO UPDATE SET 
+                            symbol = EXCLUDED.symbol,
                             rsi = EXCLUDED.rsi,
                             macd = EXCLUDED.macd,
                             macd_signal = EXCLUDED.macd_signal,
@@ -129,6 +131,7 @@ class TradingDBManager:
                             bb_lower = EXCLUDED.bb_lower,
                             atr = EXCLUDED.atr;
                     """, {
+                        'symbol': symbol,
                         'market_data_id': market_data_id,
                         'rsi': indicators.get('rsi'),
                         'macd': indicators.get('macd'),
@@ -148,11 +151,12 @@ class TradingDBManager:
             logger.error(f"Error saving indicators: {e}")
             return False
     
-    def save_signal(self, market_data_id: int, signal_type: str, 
+    def save_signal(self, symbol: str, market_data_id: int, signal_type: str, 
                    signal_strength: float = None, strategy_name: str = "realistic1") -> bool:
         """
         Save trading signal to database
         Args:
+            symbol: Trading symbol (e.g., 'BTCUSDT')
             market_data_id: Reference to market_data record
             signal_type: 'BUY', 'SELL', or 'NEUTRAL'
             signal_strength: Optional signal strength (0-100)
@@ -162,9 +166,10 @@ class TradingDBManager:
             with self.get_connection() as conn:
                 with conn.cursor() as cursor:
                     cursor.execute("""
-                        INSERT INTO signals (market_data_id, signal_type, signal_strength, strategy_name)
-                        VALUES (%(market_data_id)s, %(signal_type)s, %(signal_strength)s, %(strategy_name)s);
+                        INSERT INTO signals (symbol, market_data_id, signal_type, signal_strength, strategy_name)
+                        VALUES (%(symbol)s, %(market_data_id)s, %(signal_type)s, %(signal_strength)s, %(strategy_name)s);
                     """, {
+                        'symbol': symbol,
                         'market_data_id': market_data_id,
                         'signal_type': signal_type,
                         'signal_strength': signal_strength,

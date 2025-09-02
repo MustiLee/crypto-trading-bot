@@ -45,7 +45,10 @@
       "Bash(cd:*)",
       "Bash(cd:*)",
       "Bash(cd:*)",
-      "Bash(cd:*)"
+      "Bash(cd:*)",
+      "Bash(docker exec:*)",
+      "Bash(docker cp:*)",
+      "Bash(git add:*)"
     ],
     "deny": [],
     "ask": []

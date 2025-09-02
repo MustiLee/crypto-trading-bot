@@ -61,7 +61,7 @@ services:
         condition: service_healthy
     restart: unless-stopped
     entrypoint: ["python"]
-    command: ["/app/scripts/run_live_dashboard.py"]
+    command: ["/app/scripts/run_multi_symbol_dashboard.py"]
 
   # Optional: CLI Bot for manual operations
   bot:

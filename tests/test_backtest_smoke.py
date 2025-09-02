@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
 from src.backtest.engine import run_backtest
-from src.utils.config import StrategyConfig
+from utils.configEX import StrategyConfig
 from src.strategy.bb_macd_strategy import build_signals
 
 

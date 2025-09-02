@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional, Dict, Any
 from loguru import logger
-from src.utils.config import AppConfig
+from utils.configEX import AppConfig
 
 
 class LiveTrader:

@@ -1,7 +1,7 @@
 import pandas as pd
 import pandas_ta as ta
 from loguru import logger
-from src.utils.config import StrategyConfig
+from utils.configEX import StrategyConfig
 
 
 def add_indicators(df: pd.DataFrame, cfg: StrategyConfig) -> pd.DataFrame:

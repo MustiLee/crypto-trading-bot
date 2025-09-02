@@ -1,0 +1,30 @@
+# Multi-symbol configuration
+symbols:
+  BTC:
+    symbol: "BTCUSDT"
+    display_name: "Bitcoin"
+    min_notional: 10
+    precision: 2
+    strategy: "realistic1"
+    
+  ETH:
+    symbol: "ETHUSDT" 
+    display_name: "Ethereum"
+    min_notional: 10
+    precision: 2
+    strategy: "eth_optimized"
+    
+  XRP:
+    symbol: "XRPUSDT"
+    display_name: "Ripple"
+    min_notional: 10
+    precision: 4
+    strategy: "xrp_optimized"
+
+# Global settings
+timeframes: ["5m", "15m", "1h"]
+default_timeframe: "5m"
+
+# Dashboard settings  
+display_order: ["BTC", "ETH", "XRP"]
+auto_refresh_seconds: 2
