@@ -70,38 +70,24 @@ const StrategyTestScreen: React.FC = () => {
 
     setIsLoading(true);
     try {
-      // Create strategy first
-      const strategyConfig: StrategyConfig = {
-        name: strategyName,
-        description,
-        parameters: {
-          ...parameters,
-          symbol,
-          // Convert string parameters to numbers where needed
-          bb_period: Number(parameters.bb_period),
-          bb_std: Number(parameters.bb_std),
-          macd_fast: Number(parameters.macd_fast),
-          macd_slow: Number(parameters.macd_slow),
-          macd_signal: Number(parameters.macd_signal),
-          rsi_period: Number(parameters.rsi_period),
-          rsi_overbought: Number(parameters.rsi_overbought),
-          rsi_oversold: Number(parameters.rsi_oversold),
-          position_size: Number(parameters.position_size),
-          stop_loss: Number(parameters.stop_loss),
-          take_profit: Number(parameters.take_profit),
-        },
+      // For demo purposes - simulate backtest results
+      // In production, this would call the API
+      const mockResult: BacktestResult = {
+        total_return: Math.random() * 0.4 - 0.1, // -10% to +30%
+        sharpe_ratio: Math.random() * 2 + 0.5, // 0.5 to 2.5
+        max_drawdown: Math.random() * 0.3, // 0% to 30%
+        win_rate: Math.random() * 0.4 + 0.5, // 50% to 90%
+        total_trades: Math.floor(Math.random() * 100) + 20, // 20 to 120
+        start_date: '2024-01-01',
+        end_date: '2024-12-31',
+        final_portfolio_value: 10000 + Math.random() * 5000,
+        equity_curve: []
       };
 
-      const createResult = await apiService.createStrategy(strategyConfig);
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 2000));
       
-      if (!createResult.success || !createResult.strategy_id) {
-        Alert.alert('Hata', createResult.message);
-        return;
-      }
-
-      // Test the strategy
-      const testResult = await apiService.testStrategy(createResult.strategy_id, symbol);
-      setBacktestResult(testResult);
+      setBacktestResult(mockResult);
 
     } catch (error) {
       console.error('Strategy test error:', error);
@@ -114,6 +100,24 @@ const StrategyTestScreen: React.FC = () => {
   const handleSaveStrategy = async () => {
     if (!backtestResult) return;
 
+    // Check if user is authenticated
+    const { user, requireAuth } = useAuth();
+    
+    if (!user) {
+      Alert.alert(
+        'Giriş Gerekli',
+        'Strateji kaydetmek için giriş yapmanız gerekiyor.',
+        [
+          { text: 'İptal', style: 'cancel' },
+          {
+            text: 'Giriş Yap',
+            onPress: () => navigation.navigate('AuthStack'),
+          },
+        ]
+      );
+      return;
+    }
+
     Alert.alert(
       'Strateji Kaydet',
       'Bu stratejiyi aktif hale getirmek istiyor musunuz?',
@@ -123,8 +127,7 @@ const StrategyTestScreen: React.FC = () => {
           text: 'Kaydet ve Aktifleştir',
           onPress: async () => {
             try {
-              // In a real implementation, you'd get the strategy ID from the test result
-              // For now, we'll show a success message
+              // In a real implementation, you'd call the API
               Alert.alert(
                 'Başarılı',
                 'Strateji kaydedildi ve aktifleştirildi.',

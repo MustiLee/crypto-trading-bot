@@ -231,7 +231,10 @@ const DashboardScreen: React.FC = () => {
           {user ? (
             <Text style={styles.userInfo}>{user.first_name} {user.last_name}</Text>
           ) : (
-            <TouchableOpacity style={styles.loginButton}>
+            <TouchableOpacity 
+              style={styles.loginButton}
+              onPress={() => navigation.navigate('AuthStack')}
+            >
               <Text style={styles.loginButtonText}>👤 Giriş</Text>
             </TouchableOpacity>
           )}

@@ -114,7 +114,7 @@ const MainTabNavigator = () => (
 );
 
 const AppNavigation = () => {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isLoading } = useAuth();
 
   if (isLoading) {
     return (
@@ -127,18 +127,13 @@ const AppNavigation = () => {
   return (
     <NavigationContainer>
       <RootStack.Navigator screenOptions={{ headerShown: false }}>
-        {isAuthenticated ? (
-          <>
-            <RootStack.Screen name="MainTabs" component={MainTabNavigator} />
-            <RootStack.Screen 
-              name="StrategyTest" 
-              component={StrategyTestScreen}
-              options={{ presentation: 'modal' }}
-            />
-          </>
-        ) : (
-          <RootStack.Screen name="AuthStack" component={AuthNavigator} />
-        )}
+        <RootStack.Screen name="MainTabs" component={MainTabNavigator} />
+        <RootStack.Screen name="AuthStack" component={AuthNavigator} />
+        <RootStack.Screen 
+          name="StrategyTest" 
+          component={StrategyTestScreen}
+          options={{ presentation: 'modal' }}
+        />
       </RootStack.Navigator>
     </NavigationContainer>
   );

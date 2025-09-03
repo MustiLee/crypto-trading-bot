@@ -6,6 +6,7 @@ interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   isAuthenticated: boolean;
+  isGuest: boolean;
   login: (email: string, password: string) => Promise<boolean>;
   register: (userData: {
     email: string;
@@ -16,6 +17,7 @@ interface AuthContextType {
     telegram_id?: string;
   }) => Promise<{ success: boolean; message: string }>;
   logout: () => Promise<void>;
+  requireAuth: (callback: () => void) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -35,6 +37,7 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [authModalCallback, setAuthModalCallback] = useState<(() => void) | null>(null);
 
   useEffect(() => {
     initializeAuth();
@@ -89,13 +92,25 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  const requireAuth = (callback: () => void) => {
+    if (user) {
+      callback();
+    } else {
+      setAuthModalCallback(() => callback);
+      // This will trigger navigation to login screen
+      // Implementation will be handled in AppNavigation
+    }
+  };
+
   const value: AuthContextType = {
     user,
     isLoading,
     isAuthenticated: !!user,
+    isGuest: !user,
     login,
     register,
     logout,
+    requireAuth,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -189,7 +189,7 @@ class AuthService:
                     if not user_data:
                         raise HTTPException(
                             status_code=status.HTTP_401_UNAUTHORIZED,
-                            detail="Invalid or expired token"
+                            detail=api_error("AUTH_INVALID", "Invalid or expired token")
                         )
                     
                     # Convert to User object (simplified)
@@ -200,13 +200,18 @@ class AuthService:
             logger.error(f"Authentication error: {e}")
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Authentication failed"
+                detail=api_error("AUTH_FAILED", "Authentication failed")
             )
 
 
 # Create router
 router = APIRouter(prefix="/api/auth", tags=["authentication"])
 auth_service = AuthService()
+
+
+def api_error(code: str, message: str):
+    """Standard error detail schema"""
+    return {"code": code, "message": message}
 
 
 @router.post("/register", status_code=status.HTTP_201_CREATED)
@@ -235,7 +240,7 @@ async def register_user(request: UserRegistrationRequest, http_request: Request)
         if not success:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=message
+                detail=api_error("REGISTRATION_FAILED", message)
             )
         
         logger.info(f"User registered: {request.email} from {ip_address}")
@@ -251,7 +256,7 @@ async def register_user(request: UserRegistrationRequest, http_request: Request)
         logger.error(f"Registration error: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Registration failed"
+            detail=api_error("REGISTRATION_ERROR", "Registration failed")
         )
 
 
@@ -277,7 +282,7 @@ async def login_user(request: UserLoginRequest, http_request: Request):
         if not success:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail=message
+                detail=api_error("AUTH_INVALID", message)
             )
         
         user_data = session.user.to_dict()
@@ -297,7 +302,7 @@ async def login_user(request: UserLoginRequest, http_request: Request):
         logger.error(f"Login error: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Login failed"
+            detail=api_error("LOGIN_ERROR", "Login failed")
         )
 
 
@@ -319,7 +324,7 @@ async def logout_user(current_user: User = Depends(auth_service.get_current_user
         logger.error(f"Logout error: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Logout failed"
+            detail=api_error("LOGOUT_ERROR", "Logout failed")
         )
 
 
@@ -335,7 +340,7 @@ async def verify_email(token: str):
         if not success:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=message
+                detail=api_error("INVALID_TOKEN", message)
             )
         
         return {"message": message}
@@ -346,7 +351,7 @@ async def verify_email(token: str):
         logger.error(f"Email verification error: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Email verification failed"
+            detail=api_error("VERIFY_ERROR", "Email verification failed")
         )
 
 
@@ -380,7 +385,7 @@ async def reset_password(request: PasswordResetConfirm):
         if not success:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=message
+                detail=api_error("INVALID_TOKEN", message)
             )
         
         return {"message": message}
@@ -391,7 +396,7 @@ async def reset_password(request: PasswordResetConfirm):
         logger.error(f"Password reset error: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Password reset failed"
+            detail=api_error("RESET_ERROR", "Password reset failed")
         )
 
 
@@ -406,7 +411,7 @@ async def get_user_profile(current_user: User = Depends(auth_service.get_current
         logger.error(f"Get profile error: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to get profile"
+            detail=api_error("PROFILE_ERROR", "Failed to get profile")
         )
 
 
@@ -431,7 +436,7 @@ async def create_strategy(
         if not success:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=message
+                detail=api_error("CREATE_STRATEGY_FAILED", message)
             )
         
         return {
@@ -445,7 +450,7 @@ async def create_strategy(
         logger.error(f"Create strategy error: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to create strategy"
+            detail=api_error("CREATE_STRATEGY_ERROR", "Failed to create strategy")
         )
 
 
@@ -464,7 +469,7 @@ async def get_user_strategies(current_user: User = Depends(auth_service.get_curr
         logger.error(f"Get strategies error: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to get strategies"
+            detail=api_error("GET_STRATEGIES_ERROR", "Failed to get strategies")
         )
 
 
@@ -483,7 +488,7 @@ async def get_strategy_templates():
         logger.error(f"Get templates error: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to get templates"
+            detail=api_error("GET_TEMPLATES_ERROR", "Failed to get templates")
         )
 
 
@@ -508,7 +513,7 @@ async def backtest_strategy(
         if not success:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=message
+                detail=api_error("BACKTEST_BAD_REQUEST", message)
             )
         
         return {
@@ -519,7 +524,7 @@ async def backtest_strategy(
     except ValueError:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid strategy ID format"
+            detail=api_error("INVALID_ID", "Invalid strategy ID format")
         )
     except HTTPException:
         raise
@@ -527,7 +532,7 @@ async def backtest_strategy(
         logger.error(f"Backtest error: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Backtest failed"
+            detail=api_error("BACKTEST_ERROR", "Backtest failed")
         )
 
 
@@ -551,7 +556,7 @@ async def create_indicator_config(
         if not success:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=message
+                detail=api_error("CREATE_CONFIG_FAILED", message)
             )
         
         return {
@@ -565,7 +570,7 @@ async def create_indicator_config(
         logger.error(f"Create indicator config error: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to create indicator configuration"
+            detail=api_error("CREATE_CONFIG_ERROR", "Failed to create indicator configuration")
         )
 
 
@@ -584,7 +589,7 @@ async def get_user_indicator_configs(current_user: User = Depends(auth_service.g
         logger.error(f"Get indicator configs error: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to get indicator configurations"
+            detail=api_error("GET_CONFIGS_ERROR", "Failed to get indicator configurations")
         )
 
 
@@ -610,7 +615,7 @@ async def test_strategy(
         if not results.get("success"):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=results.get("error", "Strategy test failed")
+                detail=api_error("TEST_FAILED_BAD_REQUEST", results.get("error", "Strategy test failed"))
             )
         
         logger.info(f"Strategy test completed for user {current_user.id}: {results['metrics']['total_return_pct']:.2f}% return")
@@ -626,7 +631,7 @@ async def test_strategy(
         logger.error(f"Strategy test error: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Strategy test failed"
+            detail=api_error("TEST_ERROR", "Strategy test failed")
         )
 
 
@@ -645,7 +650,7 @@ async def quick_test_strategy(request: QuickTestRequest):
         if not results.get("success"):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=results.get("error", "Quick test failed")
+                detail=api_error("QUICK_TEST_BAD_REQUEST", results.get("error", "Quick test failed"))
             )
         
         return {
@@ -659,7 +664,7 @@ async def quick_test_strategy(request: QuickTestRequest):
         logger.error(f"Quick test error: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Quick test failed"
+            detail=api_error("QUICK_TEST_ERROR", "Quick test failed")
         )
 
 
@@ -680,14 +685,14 @@ async def activate_strategy(
         if not strategy:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="Strategy not found"
+                detail=api_error("STRATEGY_NOT_FOUND", "Strategy not found")
             )
         
         # Check if strategy has been tested and has good results
         if not strategy.get('parsed_backtest'):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Strategy must be tested before activation"
+                detail=api_error("NOT_TESTED", "Strategy must be tested before activation")
             )
         
         backtest_results = strategy.get('parsed_backtest', {})
@@ -698,13 +703,13 @@ async def activate_strategy(
         if total_return < -5:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Cannot activate a strategy with more than -5% return. Please optimize your strategy first."
+                detail=api_error("POOR_PERFORMANCE", "Cannot activate a strategy with more than -5% return. Please optimize your strategy first.")
             )
         
         if max_drawdown > 30:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Cannot activate a strategy with more than 30% maximum drawdown. Risk is too high."
+                detail=api_error("HIGH_RISK", "Cannot activate a strategy with more than 30% maximum drawdown. Risk is too high.")
             )
         
         # For now, we'll just mark it as active (implementation would connect to live trading)
@@ -725,7 +730,7 @@ async def activate_strategy(
     except ValueError:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid strategy ID format"
+            detail=api_error("INVALID_ID", "Invalid strategy ID format")
         )
     except HTTPException:
         raise
@@ -733,7 +738,7 @@ async def activate_strategy(
         logger.error(f"Strategy activation error: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to activate strategy"
+            detail=api_error("ACTIVATION_ERROR", "Failed to activate strategy")
         )
 
 
@@ -775,7 +780,7 @@ async def save_tested_strategy(
         if not success:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=message
+                detail=api_error("CREATE_STRATEGY_FAILED", message)
             )
         
         # Update strategy with test results
@@ -802,5 +807,5 @@ async def save_tested_strategy(
         logger.error(f"Save tested strategy error: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to save strategy"
+            detail=api_error("SAVE_STRATEGY_ERROR", "Failed to save strategy")
         )
