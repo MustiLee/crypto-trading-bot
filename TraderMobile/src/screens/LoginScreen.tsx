@@ -36,15 +36,15 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
     setIsLoading(true);
     try {
       const success = await login(email.trim(), password);
-      if (success) {
-        console.log('Login successful, navigating back');
-        navigation.goBack(); // Go back to previous screen
-      } else {
+      if (!success) {
         Alert.alert('Hata', 'Email veya şifre hatalı.');
       }
-    } catch (error) {
-      console.error('Login error:', error);
-      Alert.alert('Hata', 'Giriş yaparken bir hata oluştu.');
+      // Başarılı girişte navigation gating MainTabs'ı gösterecek.
+    } catch (e: any) {
+      const code = e?.code;
+      const message = e?.message || 'Giriş yaparken bir hata oluştu.';
+      const friendly = code === 'AUTH_INVALID' ? 'Email veya şifre hatalı.' : message;
+      Alert.alert('Hata', friendly);
     } finally {
       setIsLoading(false);
     }

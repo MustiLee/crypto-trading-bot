@@ -1,19 +1,9 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
+import { API_BASE_URL, WS_BASE_URL } from '../config';
 import { User, UserSession, StrategyConfig, BacktestResult } from '../types';
 
-// Get the appropriate base URL based on platform
-const getApiBaseUrl = () => {
-  if (Platform.OS === 'web') {
-    // For web development, use localhost
-    return 'http://localhost:8000';
-  } else {
-    // For mobile (Expo Go), use local IP address
-    return 'http://192.168.68.103:8000';
-  }
-};
-
-const API_BASE_URL = getApiBaseUrl();
+// API base URL is configured via app.json extra; falls back to localhost
 
 const STORAGE_KEYS = {
   SESSION_TOKEN: 'session_token',
@@ -41,15 +31,25 @@ class ApiService {
 
   private async handleResponse<T>(response: Response): Promise<T> {
     if (!response.ok) {
-      let error: string;
+      let message: string = `HTTP Error: ${response.status}`;
+      let code: string | undefined;
       try {
         const errorData = await response.json();
-        error = errorData.detail || errorData.message || `HTTP Error: ${response.status}`;
+        const detail = errorData?.detail || errorData;
+        if (typeof detail === 'object') {
+          message = detail.message || message;
+          code = detail.code;
+        } else if (typeof detail === 'string') {
+          message = detail;
+        }
       } catch {
-        error = await response.text() || `HTTP Error: ${response.status}`;
+        const txt = await response.text();
+        if (txt) message = txt;
       }
-      console.error('API Error:', error);
-      throw new Error(error);
+      const err: any = new Error(message);
+      err.code = code;
+      err.status = response.status;
+      throw err;
     }
     return await response.json();
   }
@@ -59,7 +59,7 @@ class ApiService {
     console.log('Login attempt:', email);
     
     try {
-      const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+      const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -96,7 +96,7 @@ class ApiService {
     console.log('Register attempt:', userData.email);
     
     try {
-      const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
+      const response = await fetch(`${API_BASE_URL}/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -123,12 +123,15 @@ class ApiService {
 
   async verifyEmail(email: string, verificationCode: string): Promise<{ success: boolean; message: string }> {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/auth/verify-email-code`, {
+      const response = await fetch(`${API_BASE_URL}/auth/verify-email`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ code: verificationCode }),
+        body: JSON.stringify({ 
+          email, 
+          verification_code: verificationCode 
+        }),
       });
 
       const result = await this.handleResponse(response);
@@ -144,7 +147,7 @@ class ApiService {
 
   async resendVerificationCode(email: string): Promise<{ success: boolean; message: string }> {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/auth/resend-verification`, {
+      const response = await fetch(`${API_BASE_URL}/auth/resend-verification`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -166,7 +169,7 @@ class ApiService {
   async logout(): Promise<void> {
     if (this.sessionToken) {
       try {
-        await fetch(`${API_BASE_URL}/api/auth/logout`, {
+        await fetch(`${API_BASE_URL}/auth/logout`, {
           method: 'POST',
           headers: await this.getHeaders(),
         });
@@ -188,7 +191,7 @@ class ApiService {
 
     try {
       // Verify session is still valid
-      const response = await fetch(`${API_BASE_URL}/api/auth/profile`, {
+      const response = await fetch(`${API_BASE_URL}/auth/me`, {
         headers: await this.getHeaders(),
       });
 
@@ -255,15 +258,7 @@ class ApiService {
   // WebSocket connection
   createWebSocketConnection(): WebSocket {
     // Get appropriate WebSocket URL based on platform
-    const getWebSocketUrl = () => {
-      if (Platform.OS === 'web') {
-        return 'ws://localhost:8000/ws';
-      } else {
-        return 'ws://192.168.68.103:8000/ws';
-      }
-    };
-    
-    const base = getWebSocketUrl();
+    const base = WS_BASE_URL;
     const url = this.sessionToken ? `${base}?token=${encodeURIComponent(this.sessionToken)}` : base;
     console.log('Connecting to WebSocket:', url);
     return new WebSocket(url);

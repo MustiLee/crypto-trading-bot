@@ -113,14 +113,22 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
         Alert.alert(
           '📧 Doğrulama Kodu Gönderildi',
           `${formData.email} adresine 6 haneli doğrulama kodu gönderildi.\n\nLütfen email kutunuzu (spam klasörünü de) kontrol edin ve kodu bir sonraki sayfada girin.`,
-          [{ text: 'Devam Et', onPress: () => setCurrentStep('verify') }]
+          [{ 
+            text: 'Devam Et', 
+            onPress: () => {
+              console.log('Moving to verify step');
+              setCurrentStep('verify');
+            }
+          }]
         );
       } else {
+        console.error('Registration failed:', result);
         Alert.alert('Hata', result.message);
       }
       
     } catch (error) {
-      Alert.alert('Hata', 'Doğrulama kodu gönderilirken bir hata oluştu.');
+      console.error('Registration error:', error);
+      Alert.alert('Hata', `Doğrulama kodu gönderilirken bir hata oluştu: ${error instanceof Error ? error.message : 'Bilinmeyen hata'}`);
     } finally {
       setIsLoading(false);
     }
