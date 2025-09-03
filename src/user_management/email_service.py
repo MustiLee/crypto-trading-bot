@@ -258,6 +258,8 @@ class EmailService:
                 first_name=first_name,
                 verification_url=verification_url
             )
+            # Append plain code for manual entry
+            html_content += f"<p><strong>Doğrulama Kodunuz:</strong> {token}</p><p>Bu kod 24 saat içinde geçerlidir.</p>"
             
             subject = "Verify Your Email Address - Crypto Trading Bot"
             return self.send_email(email, subject, html_content)

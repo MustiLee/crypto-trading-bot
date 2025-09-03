@@ -15,6 +15,7 @@ from loguru import logger
 from .live_signals import LiveSignalGenerator, SignalType
 from ..database.db_manager import TradingDBManager
 from ..user_management.auth_routes import router as auth_router
+from ..api.auth import router as simple_auth_router
 from ..api.market_api import router as market_router
 
 
@@ -105,6 +106,8 @@ class TradingDashboardServer:
         
         # Include authentication, market data, and strategy testing routes
         self.app.include_router(auth_router)
+        # Also include simplified /auth endpoints used by mobile flows (email code register/verify)
+        self.app.include_router(simple_auth_router)
         self.app.include_router(market_router)
         
         logger.info(f"Trading dashboard server initialized for {symbol.upper()} {interval}")

@@ -58,35 +58,31 @@ class ApiService {
   async login(email: string, password: string): Promise<UserSession> {
     console.log('Login attempt:', email);
     
-    // Mock login for demo - check against test user
-    if (email === 'test@example.com' && password === 'testpass123') {
-      const mockSession: UserSession = {
-        session_token: 'mock-token-' + Date.now(),
-        user: {
-          id: 'mock-user-id',
-          email: 'test@example.com',
-          first_name: 'Test',
-          last_name: 'User',
-          phone: null,
-          telegram_id: null,
-          is_active: true,
-          is_email_verified: true,
-          last_login: new Date().toISOString(),
-          created_at: new Date().toISOString()
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
-        expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
-      };
+        body: JSON.stringify({
+          email,
+          password
+        }),
+      });
+
+      const session = await this.handleResponse<UserSession>(response);
       
       // Store session data
-      this.sessionToken = mockSession.session_token;
-      await AsyncStorage.setItem(STORAGE_KEYS.SESSION_TOKEN, mockSession.session_token);
-      await AsyncStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(mockSession.user));
+      this.sessionToken = session.session_token;
+      await AsyncStorage.setItem(STORAGE_KEYS.SESSION_TOKEN, session.session_token);
+      await AsyncStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(session.user));
       
-      console.log('Mock login successful');
-      return mockSession;
+      console.log('Login successful');
+      return session;
+    } catch (error) {
+      console.error('Login error:', error);
+      throw error instanceof Error ? error : new Error('Giriş sırasında bir hata oluştu.');
     }
-    
-    throw new Error('Invalid email or password');
   }
 
   async register(userData: {
@@ -100,7 +96,7 @@ class ApiService {
     console.log('Register attempt:', userData.email);
     
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/register`, {
+      const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -127,21 +123,18 @@ class ApiService {
 
   async verifyEmail(email: string, verificationCode: string): Promise<{ success: boolean; message: string }> {
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/verify-email`, {
+      const response = await fetch(`${API_BASE_URL}/api/auth/verify-email-code`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          email,
-          verification_code: verificationCode
-        }),
+        body: JSON.stringify({ code: verificationCode }),
       });
 
       const result = await this.handleResponse(response);
       return result;
     } catch (error) {
-      console.error('Email verification error:', error);
+      console.error('Verify email error:', error);
       return {
         success: false,
         message: error instanceof Error ? error.message : 'Doğrulama sırasında bir hata oluştu.'
@@ -151,7 +144,7 @@ class ApiService {
 
   async resendVerificationCode(email: string): Promise<{ success: boolean; message: string }> {
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/resend-verification`, {
+      const response = await fetch(`${API_BASE_URL}/api/auth/resend-verification`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -173,7 +166,7 @@ class ApiService {
   async logout(): Promise<void> {
     if (this.sessionToken) {
       try {
-        await fetch(`${API_BASE_URL}/auth/logout`, {
+        await fetch(`${API_BASE_URL}/api/auth/logout`, {
           method: 'POST',
           headers: await this.getHeaders(),
         });
@@ -195,7 +188,7 @@ class ApiService {
 
     try {
       // Verify session is still valid
-      const response = await fetch(`${API_BASE_URL}/auth/me`, {
+      const response = await fetch(`${API_BASE_URL}/api/auth/profile`, {
         headers: await this.getHeaders(),
       });
 

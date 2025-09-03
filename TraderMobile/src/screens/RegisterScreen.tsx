@@ -60,6 +60,11 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
       return false;
     }
 
+    if (first_name.trim().length < 2 || last_name.trim().length < 2) {
+      Alert.alert('Hata', 'Ad ve Soyad en az 2 karakter olmalıdır.');
+      return false;
+    }
+
     if (!validateEmail(email)) {
       Alert.alert('Hata', 'Geçerli bir email adresi giriniz.');
       return false;
@@ -106,9 +111,9 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
 
       if (result.success) {
         Alert.alert(
-          'Doğrulama Kodu Gönderildi',
-          result.message,
-          [{ text: 'Tamam', onPress: () => setCurrentStep('verify') }]
+          '📧 Doğrulama Kodu Gönderildi',
+          `${formData.email} adresine 6 haneli doğrulama kodu gönderildi.\n\nLütfen email kutunuzu (spam klasörünü de) kontrol edin ve kodu bir sonraki sayfada girin.`,
+          [{ text: 'Devam Et', onPress: () => setCurrentStep('verify') }]
         );
       } else {
         Alert.alert('Hata', result.message);

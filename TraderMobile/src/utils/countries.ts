@@ -14,7 +14,7 @@ export const countries: Country[] = [
     phoneCode: '+90',
     phoneLength: 10,
     flag: '🇹🇷',
-    phoneFormat: '(5XX) XXX XX XX'
+    phoneFormat: '(XXX) XXX XX XX'
   },
   {
     code: 'US',
@@ -197,24 +197,36 @@ export const validatePhoneNumber = (phone: string, country: Country): boolean =>
 };
 
 export const formatPhoneNumber = (phone: string, country: Country): string => {
+  // Only keep digits
   const cleanPhone = phone.replace(/\D/g, '');
   
+  // If no format specified, return digits only
   if (!country.phoneFormat) {
     return cleanPhone;
   }
   
-  let formatted = country.phoneFormat;
-  let phoneIndex = 0;
-  
-  for (let i = 0; i < formatted.length && phoneIndex < cleanPhone.length; i++) {
-    if (formatted[i] === 'X') {
-      formatted = formatted.substring(0, i) + cleanPhone[phoneIndex] + formatted.substring(i + 1);
-      phoneIndex++;
-    }
+  // Don't format if empty
+  if (cleanPhone.length === 0) {
+    return '';
   }
   
-  // Remove remaining X's if phone is shorter than format
-  formatted = formatted.replace(/X/g, '');
+  // Apply formatting only up to the available digits
+  let formatted = '';
+  let phoneIndex = 0;
+  
+  for (let i = 0; i < country.phoneFormat.length && phoneIndex < cleanPhone.length; i++) {
+    const ch = country.phoneFormat[i];
+    if (ch === 'X') {
+      formatted += cleanPhone[phoneIndex];
+      phoneIndex++;
+    } else if (!/[0-9]/.test(ch)) {
+      // Only inject non-digit formatting characters (spaces, dashes, parentheses)
+      formatted += ch;
+    } else {
+      // Skip literal digits in format to avoid forcing numbers like '5'
+      continue;
+    }
+  }
   
   return formatted;
 };

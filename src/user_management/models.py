@@ -55,8 +55,9 @@ class User(Base):
         return check_password_hash(self.password_hash, password)
     
     def generate_email_verification_token(self) -> str:
-        """Generate email verification token"""
-        self.email_verification_token = secrets.token_urlsafe(32)
+        """Generate a short 6-digit email verification code"""
+        code = str(secrets.randbelow(10**6)).zfill(6)
+        self.email_verification_token = code
         # Token expires in 24 hours
         self.email_verification_expires = datetime.utcnow().replace(tzinfo=timezone.utc) + \
                                           datetime.timedelta(hours=24)

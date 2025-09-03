@@ -354,6 +354,51 @@ async def verify_email(token: str):
             detail=api_error("VERIFY_ERROR", "Email verification failed")
         )
 
+@router.post("/verify-email-code")
+async def verify_email_code(request: VerifyCodeRequest):
+    """Verify email using a short verification code"""
+    try:
+        db_session = auth_service.get_db_session()
+        user_manager = UserManager(db_session)
+        success, message = user_manager.verify_email(request.code)
+        if not success:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=api_error("INVALID_CODE", message))
+        return {"message": message}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Email code verification error: {e}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=api_error("VERIFY_ERROR", "Email verification failed"))
+
+@router.post("/resend-verification")
+async def resend_verification(request: ResendVerificationRequest):
+    """Resend a fresh verification code to the user's email"""
+    try:
+        db_session = auth_service.get_db_session()
+        email_service = EmailService()
+        user_manager = UserManager(db_session, email_service)
+        
+        # Find user by email
+        user = db_session.query(User).filter(User.email == request.email).first()
+        if not user:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=api_error("USER_NOT_FOUND", "User not found"))
+        if user.is_email_verified:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=api_error("ALREADY_VERIFIED", "Email already verified"))
+        
+        # Regenerate code and send email
+        code = user.generate_email_verification_token()
+        db_session.commit()
+        
+        if not email_service.send_verification_email(user.email, user.first_name, code):
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=api_error("EMAIL_SEND_ERROR", "Failed to send verification email"))
+        
+        return {"message": "Verification code resent"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Resend verification error: {e}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=api_error("RESEND_ERROR", "Failed to resend verification"))
+
 
 @router.post("/request-password-reset")
 async def request_password_reset(request: PasswordResetRequest):
@@ -764,6 +809,12 @@ async def save_tested_strategy(
         warnings = []
         if total_return < 0:
             warnings.append("Strategy has negative returns")
+class VerifyCodeRequest(BaseModel):
+    code: str
+
+class ResendVerificationRequest(BaseModel):
+    email: EmailStr
+
         if max_drawdown > 20:
             warnings.append("Strategy has high risk (>20% drawdown)")
         if metrics.get('total_trades', 0) < 10:
