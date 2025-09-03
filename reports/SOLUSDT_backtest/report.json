@@ -1,0 +1,18 @@
+{
+  "final_value": 10430.06605879811,
+  "initial_value": 10000.0,
+  "total_return_pct": 4.300660587981087,
+  "cagr_pct": 0.0,
+  "max_drawdown_pct": 16.553267334599354,
+  "sharpe_ratio": 0.0,
+  "win_rate_pct": 33.33333333333333,
+  "profit_factor": 1.054314005749457,
+  "total_trades": 16,
+  "avg_trade_pct": 0.0,
+  "best_trade_pct": 6.805349962333096,
+  "worst_trade_pct": -4.333112562984553,
+  "max_dd_duration": "253 days 00:00:00",
+  "total_fees": 132.74792425055426,
+  "trades_saved": "/app/reports/SOLUSDT_backtest/trades.csv",
+  "plots_saved": false
+}

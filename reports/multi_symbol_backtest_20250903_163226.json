@@ -1,0 +1,646 @@
+{
+  "BTC": {
+    "5m": {
+      "metrics": {
+        "final_value": 10000.0,
+        "initial_value": 10000.0,
+        "total_return_pct": 0.0,
+        "cagr_pct": 0.0,
+        "max_drawdown_pct": 0.0,
+        "sharpe_ratio": 0.0,
+        "win_rate_pct": 0.0,
+        "profit_factor": 0.0,
+        "total_trades": 0,
+        "avg_trade_pct": 0.0,
+        "best_trade_pct": 0.0,
+        "worst_trade_pct": 0.0,
+        "max_dd_duration": "NaT",
+        "total_fees": 0.0,
+        "plots_saved": false
+      },
+      "portfolio": "Portfolio(**Config({\n    \"wrapper\": \"<vectorbt.base.array_wrapper.ArrayWrapper object at 0xffff5cf58090> of shape (801,)\",\n    \"close\": \"<pandas.core.series.Series object at 0xffff5cf8de90> of shape (801,)\",\n    \"order_records\": \"<numpy.ndarray object at 0xffff5cc12970> of shape (0,)\",\n    \"log_records\": \"<numpy.ndarray object at 0xffff5e6a2d90> of shape (0,)\",\n    \"init_cash\": \"<numpy.ndarray object at 0xffff5cf546f0> of shape (1,)\",\n    \"cash_sharing\": false,\n    \"call_seq\": null,\n    \"fillna_close\": null,\n    \"trades_type\": null\n}))"
+    },
+    "15m": {
+      "metrics": {
+        "final_value": 10000.0,
+        "initial_value": 10000.0,
+        "total_return_pct": 0.0,
+        "cagr_pct": 0.0,
+        "max_drawdown_pct": 0.0,
+        "sharpe_ratio": 0.0,
+        "win_rate_pct": 0.0,
+        "profit_factor": 0.0,
+        "total_trades": 0,
+        "avg_trade_pct": 0.0,
+        "best_trade_pct": 0.0,
+        "worst_trade_pct": 0.0,
+        "max_dd_duration": "NaT",
+        "total_fees": 0.0,
+        "plots_saved": false
+      },
+      "portfolio": "Portfolio(**Config({\n    \"wrapper\": \"<vectorbt.base.array_wrapper.ArrayWrapper object at 0xffff5bf9a550> of shape (801,)\",\n    \"close\": \"<pandas.core.series.Series object at 0xffff5c643bd0> of shape (801,)\",\n    \"order_records\": \"<numpy.ndarray object at 0xffff5c54a070> of shape (0,)\",\n    \"log_records\": \"<numpy.ndarray object at 0xffff5c5485d0> of shape (0,)\",\n    \"init_cash\": \"<numpy.ndarray object at 0xffff5c54a310> of shape (1,)\",\n    \"cash_sharing\": false,\n    \"call_seq\": null,\n    \"fillna_close\": null,\n    \"trades_type\": null\n}))"
+    },
+    "1h": {
+      "metrics": {
+        "final_value": 10000.0,
+        "initial_value": 10000.0,
+        "total_return_pct": 0.0,
+        "cagr_pct": 0.0,
+        "max_drawdown_pct": 0.0,
+        "sharpe_ratio": 0.0,
+        "win_rate_pct": 0.0,
+        "profit_factor": 0.0,
+        "total_trades": 0,
+        "avg_trade_pct": 0.0,
+        "best_trade_pct": 0.0,
+        "worst_trade_pct": 0.0,
+        "max_dd_duration": "NaT",
+        "total_fees": 0.0,
+        "plots_saved": false
+      },
+      "portfolio": "Portfolio(**Config({\n    \"wrapper\": \"<vectorbt.base.array_wrapper.ArrayWrapper object at 0xffff52902a10> of shape (521,)\",\n    \"close\": \"<pandas.core.series.Series object at 0xffff52900a10> of shape (521,)\",\n    \"order_records\": \"<numpy.ndarray object at 0xffff5c548630> of shape (0,)\",\n    \"log_records\": \"<numpy.ndarray object at 0xffff5c5498f0> of shape (0,)\",\n    \"init_cash\": \"<numpy.ndarray object at 0xffff5c5483f0> of shape (1,)\",\n    \"cash_sharing\": false,\n    \"call_seq\": null,\n    \"fillna_close\": null,\n    \"trades_type\": null\n}))"
+    }
+  },
+  "ETH": {
+    "5m": {
+      "metrics": {
+        "final_value": 9573.837450904846,
+        "initial_value": 10000.0,
+        "total_return_pct": -4.261625490951538,
+        "cagr_pct": 0.0,
+        "max_drawdown_pct": 6.586218175452034,
+        "sharpe_ratio": 0.0,
+        "win_rate_pct": 16.666666666666664,
+        "profit_factor": 0.2375878347329198,
+        "total_trades": 19,
+        "avg_trade_pct": 0.0,
+        "best_trade_pct": 1.262543189907281,
+        "worst_trade_pct": -1.2670123373795206,
+        "max_dd_duration": "912 days 00:00:00",
+        "total_fees": 143.6337153138654,
+        "trades_saved": "/app/reports/ETHUSDT_backtest/trades.csv",
+        "plots_saved": false
+      },
+      "portfolio": "Portfolio(**Config({\n    \"wrapper\": \"<vectorbt.base.array_wrapper.ArrayWrapper object at 0xffff537b2110> of shape (951,)\",\n    \"close\": \"<pandas.core.series.Series object at 0xffff537b3250> of shape (951,)\",\n    \"order_records\": \"<numpy.ndarray object at 0xffff5dcbc210> of shape (37,)\",\n    \"log_records\": \"<numpy.ndarray object at 0xffff5dcbc330> of shape (0,)\",\n    \"init_cash\": \"<numpy.ndarray object at 0xffff5dcbc690> of shape (1,)\",\n    \"cash_sharing\": false,\n    \"call_seq\": null,\n    \"fillna_close\": null,\n    \"trades_type\": null\n}))"
+    },
+    "15m": {
+      "metrics": {
+        "final_value": 9426.561162179441,
+        "initial_value": 10000.0,
+        "total_return_pct": -5.73438837820559,
+        "cagr_pct": 0.0,
+        "max_drawdown_pct": 5.795558005304857,
+        "sharpe_ratio": 0.0,
+        "win_rate_pct": 20.0,
+        "profit_factor": 0.1252906429182842,
+        "total_trades": 15,
+        "avg_trade_pct": 0.0,
+        "best_trade_pct": 0.5313357502181381,
+        "worst_trade_pct": -1.0953016269989526,
+        "max_dd_duration": "718 days 00:00:00",
+        "total_fees": 117.07658132203467,
+        "trades_saved": "/app/reports/ETHUSDT_backtest/trades.csv",
+        "plots_saved": false
+      },
+      "portfolio": "Portfolio(**Config({\n    \"wrapper\": \"<vectorbt.base.array_wrapper.ArrayWrapper object at 0xffff5c255350> of shape (951,)\",\n    \"close\": \"<pandas.core.series.Series object at 0xffff5c255050> of shape (951,)\",\n    \"order_records\": \"<numpy.ndarray object at 0xffff5b4d5c50> of shape (30,)\",\n    \"log_records\": \"<numpy.ndarray object at 0xffff5b4d5050> of shape (0,)\",\n    \"init_cash\": \"<numpy.ndarray object at 0xffff5b4d4570> of shape (1,)\",\n    \"cash_sharing\": false,\n    \"call_seq\": null,\n    \"fillna_close\": null,\n    \"trades_type\": null\n}))"
+    },
+    "1h": {
+      "metrics": {
+        "final_value": 11005.482960129719,
+        "initial_value": 10000.0,
+        "total_return_pct": 10.054829601297177,
+        "cagr_pct": 0.0,
+        "max_drawdown_pct": 10.035952514064537,
+        "sharpe_ratio": 0.0,
+        "win_rate_pct": 30.0,
+        "profit_factor": 1.7792447176018018,
+        "total_trades": 11,
+        "avg_trade_pct": 0.0,
+        "best_trade_pct": 15.291634640326283,
+        "worst_trade_pct": -2.9563702284634,
+        "max_dd_duration": "553 days 00:00:00",
+        "total_fees": 93.28306569308867,
+        "trades_saved": "/app/reports/ETHUSDT_backtest/trades.csv",
+        "plots_saved": false
+      },
+      "portfolio": "Portfolio(**Config({\n    \"wrapper\": \"<vectorbt.base.array_wrapper.ArrayWrapper object at 0xffff58b13310> of shape (671,)\",\n    \"close\": \"<pandas.core.series.Series object at 0xffff58b11e90> of shape (671,)\",\n    \"order_records\": \"<numpy.ndarray object at 0xffff5b47db90> of shape (21,)\",\n    \"log_records\": \"<numpy.ndarray object at 0xffff5b47e730> of shape (0,)\",\n    \"init_cash\": \"<numpy.ndarray object at 0xffff5b47c6f0> of shape (1,)\",\n    \"cash_sharing\": false,\n    \"call_seq\": null,\n    \"fillna_close\": null,\n    \"trades_type\": null\n}))"
+    }
+  },
+  "XRP": {
+    "5m": {
+      "metrics": {
+        "final_value": 9898.661411081264,
+        "initial_value": 10000.0,
+        "total_return_pct": -1.013385889187357,
+        "cagr_pct": 0.0,
+        "max_drawdown_pct": 3.8325265257220993,
+        "sharpe_ratio": 0.0,
+        "win_rate_pct": 18.181818181818183,
+        "profit_factor": 0.8519218662112624,
+        "total_trades": 23,
+        "avg_trade_pct": 0.0,
+        "best_trade_pct": 1.9634961567044635,
+        "worst_trade_pct": -1.0296754396555696,
+        "max_dd_duration": "666 days 00:00:00",
+        "total_fees": 177.64961411809665,
+        "trades_saved": "/app/reports/XRPUSDT_backtest/trades.csv",
+        "plots_saved": false
+      },
+      "portfolio": "Portfolio(**Config({\n    \"wrapper\": \"<vectorbt.base.array_wrapper.ArrayWrapper object at 0xffff596a2a50> of shape (967,)\",\n    \"close\": \"<pandas.core.series.Series object at 0xffff596a0ed0> of shape (967,)\",\n    \"order_records\": \"<numpy.ndarray object at 0xffff5dd6a3d0> of shape (45,)\",\n    \"log_records\": \"<numpy.ndarray object at 0xffff5dd6b210> of shape (0,)\",\n    \"init_cash\": \"<numpy.ndarray object at 0xffff5dd6b150> of shape (1,)\",\n    \"cash_sharing\": false,\n    \"call_seq\": null,\n    \"fillna_close\": null,\n    \"trades_type\": null\n}))"
+    },
+    "15m": {
+      "metrics": {
+        "final_value": 8861.094194530648,
+        "initial_value": 10000.0,
+        "total_return_pct": -11.389058054693525,
+        "cagr_pct": 0.0,
+        "max_drawdown_pct": 13.984488397584876,
+        "sharpe_ratio": 0.0,
+        "win_rate_pct": 21.73913043478261,
+        "profit_factor": 0.2460080071625944,
+        "total_trades": 24,
+        "avg_trade_pct": 0.0,
+        "best_trade_pct": 2.287161372670945,
+        "worst_trade_pct": -1.419255445447973,
+        "max_dd_duration": "950 days 00:00:00",
+        "total_fees": 178.55606033622604,
+        "trades_saved": "/app/reports/XRPUSDT_backtest/trades.csv",
+        "plots_saved": false
+      },
+      "portfolio": "Portfolio(**Config({\n    \"wrapper\": \"<vectorbt.base.array_wrapper.ArrayWrapper object at 0xffff5c1b9690> of shape (967,)\",\n    \"close\": \"<pandas.core.series.Series object at 0xffff5c1b8fd0> of shape (967,)\",\n    \"order_records\": \"<numpy.ndarray object at 0xffff5b4d63d0> of shape (47,)\",\n    \"log_records\": \"<numpy.ndarray object at 0xffff5b47e970> of shape (0,)\",\n    \"init_cash\": \"<numpy.ndarray object at 0xffff5b4d7270> of shape (1,)\",\n    \"cash_sharing\": false,\n    \"call_seq\": null,\n    \"fillna_close\": null,\n    \"trades_type\": null\n}))"
+    },
+    "1h": {
+      "metrics": {
+        "final_value": 9112.647986382417,
+        "initial_value": 10000.0,
+        "total_return_pct": -8.873520136175827,
+        "cagr_pct": 0.0,
+        "max_drawdown_pct": 21.43809623166947,
+        "sharpe_ratio": 0.0,
+        "win_rate_pct": 17.647058823529413,
+        "profit_factor": 0.4985416507496806,
+        "total_trades": 18,
+        "avg_trade_pct": 0.0,
+        "best_trade_pct": 9.168907621218715,
+        "worst_trade_pct": -2.8182416824574688,
+        "max_dd_duration": "637 days 00:00:00",
+        "total_fees": 137.40285814824526,
+        "trades_saved": "/app/reports/XRPUSDT_backtest/trades.csv",
+        "plots_saved": false
+      },
+      "portfolio": "Portfolio(**Config({\n    \"wrapper\": \"<vectorbt.base.array_wrapper.ArrayWrapper object at 0xffff590537d0> of shape (687,)\",\n    \"close\": \"<pandas.core.series.Series object at 0xffff59052050> of shape (687,)\",\n    \"order_records\": \"<numpy.ndarray object at 0xffff5bd740f0> of shape (35,)\",\n    \"log_records\": \"<numpy.ndarray object at 0xffff5bd75b90> of shape (0,)\",\n    \"init_cash\": \"<numpy.ndarray object at 0xffff5bd74f30> of shape (1,)\",\n    \"cash_sharing\": false,\n    \"call_seq\": null,\n    \"fillna_close\": null,\n    \"trades_type\": null\n}))"
+    }
+  },
+  "BNB": {
+    "5m": {
+      "metrics": {
+        "final_value": 10000.0,
+        "initial_value": 10000.0,
+        "total_return_pct": 0.0,
+        "cagr_pct": 0.0,
+        "max_drawdown_pct": 0.0,
+        "sharpe_ratio": 0.0,
+        "win_rate_pct": 0.0,
+        "profit_factor": 0.0,
+        "total_trades": 0,
+        "avg_trade_pct": 0.0,
+        "best_trade_pct": 0.0,
+        "worst_trade_pct": 0.0,
+        "max_dd_duration": "NaT",
+        "total_fees": 0.0,
+        "plots_saved": false
+      },
+      "portfolio": "Portfolio(**Config({\n    \"wrapper\": \"<vectorbt.base.array_wrapper.ArrayWrapper object at 0xffff50db9bd0> of shape (801,)\",\n    \"close\": \"<pandas.core.series.Series object at 0xffff50dba4d0> of shape (801,)\",\n    \"order_records\": \"<numpy.ndarray object at 0xffff5c3a89f0> of shape (0,)\",\n    \"log_records\": \"<numpy.ndarray object at 0xffff5c3aabb0> of shape (0,)\",\n    \"init_cash\": \"<numpy.ndarray object at 0xffff5c3abcf0> of shape (1,)\",\n    \"cash_sharing\": false,\n    \"call_seq\": null,\n    \"fillna_close\": null,\n    \"trades_type\": null\n}))"
+    },
+    "15m": {
+      "metrics": {
+        "final_value": 10000.0,
+        "initial_value": 10000.0,
+        "total_return_pct": 0.0,
+        "cagr_pct": 0.0,
+        "max_drawdown_pct": 0.0,
+        "sharpe_ratio": 0.0,
+        "win_rate_pct": 0.0,
+        "profit_factor": 0.0,
+        "total_trades": 0,
+        "avg_trade_pct": 0.0,
+        "best_trade_pct": 0.0,
+        "worst_trade_pct": 0.0,
+        "max_dd_duration": "NaT",
+        "total_fees": 0.0,
+        "plots_saved": false
+      },
+      "portfolio": "Portfolio(**Config({\n    \"wrapper\": \"<vectorbt.base.array_wrapper.ArrayWrapper object at 0xffff5216b290> of shape (801,)\",\n    \"close\": \"<pandas.core.series.Series object at 0xffff521f2f50> of shape (801,)\",\n    \"order_records\": \"<numpy.ndarray object at 0xffff5bc7e610> of shape (0,)\",\n    \"log_records\": \"<numpy.ndarray object at 0xffff5bc7f4b0> of shape (0,)\",\n    \"init_cash\": \"<numpy.ndarray object at 0xffff5bc7ff90> of shape (1,)\",\n    \"cash_sharing\": false,\n    \"call_seq\": null,\n    \"fillna_close\": null,\n    \"trades_type\": null\n}))"
+    },
+    "1h": {
+      "metrics": {
+        "final_value": 10000.0,
+        "initial_value": 10000.0,
+        "total_return_pct": 0.0,
+        "cagr_pct": 0.0,
+        "max_drawdown_pct": 0.0,
+        "sharpe_ratio": 0.0,
+        "win_rate_pct": 0.0,
+        "profit_factor": 0.0,
+        "total_trades": 0,
+        "avg_trade_pct": 0.0,
+        "best_trade_pct": 0.0,
+        "worst_trade_pct": 0.0,
+        "max_dd_duration": "NaT",
+        "total_fees": 0.0,
+        "plots_saved": false
+      },
+      "portfolio": "Portfolio(**Config({\n    \"wrapper\": \"<vectorbt.base.array_wrapper.ArrayWrapper object at 0xffff599a1790> of shape (521,)\",\n    \"close\": \"<pandas.core.series.Series object at 0xffff599a3310> of shape (521,)\",\n    \"order_records\": \"<numpy.ndarray object at 0xffff5bc25050> of shape (0,)\",\n    \"log_records\": \"<numpy.ndarray object at 0xffff5bc25770> of shape (0,)\",\n    \"init_cash\": \"<numpy.ndarray object at 0xffff5b4d5d70> of shape (1,)\",\n    \"cash_sharing\": false,\n    \"call_seq\": null,\n    \"fillna_close\": null,\n    \"trades_type\": null\n}))"
+    }
+  },
+  "ADA": {
+    "5m": {
+      "metrics": {
+        "final_value": 9580.600096219827,
+        "initial_value": 10000.0,
+        "total_return_pct": -4.193999037801732,
+        "cagr_pct": 0.0,
+        "max_drawdown_pct": 5.045501811387183,
+        "sharpe_ratio": 0.0,
+        "win_rate_pct": 23.52941176470588,
+        "profit_factor": 0.42354862079206784,
+        "total_trades": 17,
+        "avg_trade_pct": 0.0,
+        "best_trade_pct": 1.3991006423903882,
+        "worst_trade_pct": -2.651874412266015,
+        "max_dd_duration": "874 days 00:00:00",
+        "total_fees": 132.08924690869307,
+        "trades_saved": "/app/reports/ADAUSDT_backtest/trades.csv",
+        "plots_saved": false
+      },
+      "portfolio": "Portfolio(**Config({\n    \"wrapper\": \"<vectorbt.base.array_wrapper.ArrayWrapper object at 0xffff5323dc10> of shape (951,)\",\n    \"close\": \"<pandas.core.series.Series object at 0xffff5323cc90> of shape (951,)\",\n    \"order_records\": \"<numpy.ndarray object at 0xffff5b91a5b0> of shape (34,)\",\n    \"log_records\": \"<numpy.ndarray object at 0xffff5b91af70> of shape (0,)\",\n    \"init_cash\": \"<numpy.ndarray object at 0xffff5b9198f0> of shape (1,)\",\n    \"cash_sharing\": false,\n    \"call_seq\": null,\n    \"fillna_close\": null,\n    \"trades_type\": null\n}))"
+    },
+    "15m": {
+      "metrics": {
+        "final_value": 9513.63579189213,
+        "initial_value": 10000.0,
+        "total_return_pct": -4.863642081078701,
+        "cagr_pct": 0.0,
+        "max_drawdown_pct": 10.357021407387347,
+        "sharpe_ratio": 0.0,
+        "win_rate_pct": 23.52941176470588,
+        "profit_factor": 0.5474621860142211,
+        "total_trades": 18,
+        "avg_trade_pct": 0.0,
+        "best_trade_pct": 2.149043795928622,
+        "worst_trade_pct": -1.4522491426231285,
+        "max_dd_duration": "916 days 00:00:00",
+        "total_fees": 134.02385416385678,
+        "trades_saved": "/app/reports/ADAUSDT_backtest/trades.csv",
+        "plots_saved": false
+      },
+      "portfolio": "Portfolio(**Config({\n    \"wrapper\": \"<vectorbt.base.array_wrapper.ArrayWrapper object at 0xffff52fe1810> of shape (951,)\",\n    \"close\": \"<pandas.core.series.Series object at 0xffff52fe3710> of shape (951,)\",\n    \"order_records\": \"<numpy.ndarray object at 0xffff5b966eb0> of shape (35,)\",\n    \"log_records\": \"<numpy.ndarray object at 0xffff5b966370> of shape (0,)\",\n    \"init_cash\": \"<numpy.ndarray object at 0xffff5b965890> of shape (1,)\",\n    \"cash_sharing\": false,\n    \"call_seq\": null,\n    \"fillna_close\": null,\n    \"trades_type\": null\n}))"
+    },
+    "1h": {
+      "metrics": {
+        "final_value": 9826.207527519487,
+        "initial_value": 10000.0,
+        "total_return_pct": -1.7379247248051288,
+        "cagr_pct": 0.0,
+        "max_drawdown_pct": 26.564469939821535,
+        "sharpe_ratio": 0.0,
+        "win_rate_pct": 25.0,
+        "profit_factor": 0.9520244091168015,
+        "total_trades": 17,
+        "avg_trade_pct": 0.0,
+        "best_trade_pct": 16.444532546297868,
+        "worst_trade_pct": -4.868002958758436,
+        "max_dd_duration": "490 days 00:00:00",
+        "total_fees": 139.93073862329678,
+        "trades_saved": "/app/reports/ADAUSDT_backtest/trades.csv",
+        "plots_saved": false
+      },
+      "portfolio": "Portfolio(**Config({\n    \"wrapper\": \"<vectorbt.base.array_wrapper.ArrayWrapper object at 0xffff53d03f10> of shape (671,)\",\n    \"close\": \"<pandas.core.series.Series object at 0xffff53d02890> of shape (671,)\",\n    \"order_records\": \"<numpy.ndarray object at 0xffff5b4dd410> of shape (33,)\",\n    \"log_records\": \"<numpy.ndarray object at 0xffff5b4ddef0> of shape (0,)\",\n    \"init_cash\": \"<numpy.ndarray object at 0xffff5b4dd770> of shape (1,)\",\n    \"cash_sharing\": false,\n    \"call_seq\": null,\n    \"fillna_close\": null,\n    \"trades_type\": null\n}))"
+    }
+  },
+  "SOL": {
+    "5m": {
+      "metrics": {
+        "final_value": 10053.58132626502,
+        "initial_value": 10000.0,
+        "total_return_pct": 0.5358132626501977,
+        "cagr_pct": 0.0,
+        "max_drawdown_pct": 4.418216559397741,
+        "sharpe_ratio": 0.0,
+        "win_rate_pct": 21.73913043478261,
+        "profit_factor": 1.0846376630968146,
+        "total_trades": 23,
+        "avg_trade_pct": 0.0,
+        "best_trade_pct": 2.8353854731845143,
+        "worst_trade_pct": -0.861905674281491,
+        "max_dd_duration": "364 days 00:00:00",
+        "total_fees": 183.53811910005516,
+        "trades_saved": "/app/reports/SOLUSDT_backtest/trades.csv",
+        "plots_saved": false
+      },
+      "portfolio": "Portfolio(**Config({\n    \"wrapper\": \"<vectorbt.base.array_wrapper.ArrayWrapper object at 0xffff59469b50> of shape (967,)\",\n    \"close\": \"<pandas.core.series.Series object at 0xffff59468c50> of shape (967,)\",\n    \"order_records\": \"<numpy.ndarray object at 0xffff59d07690> of shape (46,)\",\n    \"log_records\": \"<numpy.ndarray object at 0xffff59d07a50> of shape (0,)\",\n    \"init_cash\": \"<numpy.ndarray object at 0xffff59d07ed0> of shape (1,)\",\n    \"cash_sharing\": false,\n    \"call_seq\": null,\n    \"fillna_close\": null,\n    \"trades_type\": null\n}))"
+    },
+    "15m": {
+      "metrics": {
+        "final_value": 10112.752859537542,
+        "initial_value": 10000.0,
+        "total_return_pct": 1.1275285953754155,
+        "cagr_pct": 0.0,
+        "max_drawdown_pct": 7.8506231778806805,
+        "sharpe_ratio": 0.0,
+        "win_rate_pct": 31.57894736842105,
+        "profit_factor": 1.1786130276590059,
+        "total_trades": 20,
+        "avg_trade_pct": 0.0,
+        "best_trade_pct": 4.943859983795964,
+        "worst_trade_pct": -2.165409864465487,
+        "max_dd_duration": "665 days 00:00:00",
+        "total_fees": 157.0957942523118,
+        "trades_saved": "/app/reports/SOLUSDT_backtest/trades.csv",
+        "plots_saved": false
+      },
+      "portfolio": "Portfolio(**Config({\n    \"wrapper\": \"<vectorbt.base.array_wrapper.ArrayWrapper object at 0xffff538caed0> of shape (967,)\",\n    \"close\": \"<pandas.core.series.Series object at 0xffff538cbed0> of shape (967,)\",\n    \"order_records\": \"<numpy.ndarray object at 0xffff59c79f50> of shape (39,)\",\n    \"log_records\": \"<numpy.ndarray object at 0xffff59c79710> of shape (0,)\",\n    \"init_cash\": \"<numpy.ndarray object at 0xffff59c79590> of shape (1,)\",\n    \"cash_sharing\": false,\n    \"call_seq\": null,\n    \"fillna_close\": null,\n    \"trades_type\": null\n}))"
+    },
+    "1h": {
+      "metrics": {
+        "final_value": 10426.101573195867,
+        "initial_value": 10000.0,
+        "total_return_pct": 4.261015731958673,
+        "cagr_pct": 0.0,
+        "max_drawdown_pct": 16.553267334599354,
+        "sharpe_ratio": 0.0,
+        "win_rate_pct": 33.33333333333333,
+        "profit_factor": 1.054314005749457,
+        "total_trades": 16,
+        "avg_trade_pct": 0.0,
+        "best_trade_pct": 6.805349962333096,
+        "worst_trade_pct": -4.333112562984553,
+        "max_dd_duration": "253 days 00:00:00",
+        "total_fees": 132.74792425055426,
+        "trades_saved": "/app/reports/SOLUSDT_backtest/trades.csv",
+        "plots_saved": false
+      },
+      "portfolio": "Portfolio(**Config({\n    \"wrapper\": \"<vectorbt.base.array_wrapper.ArrayWrapper object at 0xffff53701990> of shape (687,)\",\n    \"close\": \"<pandas.core.series.Series object at 0xffff53703fd0> of shape (687,)\",\n    \"order_records\": \"<numpy.ndarray object at 0xffff59cddf50> of shape (31,)\",\n    \"log_records\": \"<numpy.ndarray object at 0xffff5b942430> of shape (0,)\",\n    \"init_cash\": \"<numpy.ndarray object at 0xffff59cdec70> of shape (1,)\",\n    \"cash_sharing\": false,\n    \"call_seq\": null,\n    \"fillna_close\": null,\n    \"trades_type\": null\n}))"
+    }
+  },
+  "DOT": {
+    "5m": {
+      "metrics": {
+        "final_value": 9413.419143070314,
+        "initial_value": 10000.0,
+        "total_return_pct": -5.86580856929686,
+        "cagr_pct": 0.0,
+        "max_drawdown_pct": 8.313741463173372,
+        "sharpe_ratio": 0.0,
+        "win_rate_pct": 58.333333333333336,
+        "profit_factor": 0.3073168129114615,
+        "total_trades": 25,
+        "avg_trade_pct": 0.0,
+        "best_trade_pct": 0.6094977807539188,
+        "worst_trade_pct": -1.7641384147936638,
+        "max_dd_duration": "793 days 00:00:00",
+        "total_fees": 187.23325555847566,
+        "trades_saved": "/app/reports/DOTUSDT_backtest/trades.csv",
+        "plots_saved": false
+      },
+      "portfolio": "Portfolio(**Config({\n    \"wrapper\": \"<vectorbt.base.array_wrapper.ArrayWrapper object at 0xffff539cb9d0> of shape (967,)\",\n    \"close\": \"<pandas.core.series.Series object at 0xffff539cad90> of shape (967,)\",\n    \"order_records\": \"<numpy.ndarray object at 0xffff5b4df630> of shape (49,)\",\n    \"log_records\": \"<numpy.ndarray object at 0xffff52e6ae50> of shape (0,)\",\n    \"init_cash\": \"<numpy.ndarray object at 0xffff5ba6d410> of shape (1,)\",\n    \"cash_sharing\": false,\n    \"call_seq\": null,\n    \"fillna_close\": null,\n    \"trades_type\": null\n}))"
+    },
+    "15m": {
+      "metrics": {
+        "final_value": 9241.694947721026,
+        "initial_value": 10000.0,
+        "total_return_pct": -7.583050522789748,
+        "cagr_pct": 0.0,
+        "max_drawdown_pct": 12.520142010347849,
+        "sharpe_ratio": 0.0,
+        "win_rate_pct": 61.29032258064516,
+        "profit_factor": 0.5019870195896214,
+        "total_trades": 31,
+        "avg_trade_pct": 0.0,
+        "best_trade_pct": 1.5404466597869804,
+        "worst_trade_pct": -4.171375141267009,
+        "max_dd_duration": "929 days 00:00:00",
+        "total_fees": 232.23868244696072,
+        "trades_saved": "/app/reports/DOTUSDT_backtest/trades.csv",
+        "plots_saved": false
+      },
+      "portfolio": "Portfolio(**Config({\n    \"wrapper\": \"<vectorbt.base.array_wrapper.ArrayWrapper object at 0xffff586c7a10> of shape (967,)\",\n    \"close\": \"<pandas.core.series.Series object at 0xffff586c7890> of shape (967,)\",\n    \"order_records\": \"<numpy.ndarray object at 0xffff5009c2d0> of shape (62,)\",\n    \"log_records\": \"<numpy.ndarray object at 0xffff5009d530> of shape (0,)\",\n    \"init_cash\": \"<numpy.ndarray object at 0xffff5009ce70> of shape (1,)\",\n    \"cash_sharing\": false,\n    \"call_seq\": null,\n    \"fillna_close\": null,\n    \"trades_type\": null\n}))"
+    },
+    "1h": {
+      "metrics": {
+        "final_value": 10364.34153271555,
+        "initial_value": 10000.0,
+        "total_return_pct": 3.643415327155508,
+        "cagr_pct": 0.0,
+        "max_drawdown_pct": 10.424741389582431,
+        "sharpe_ratio": 0.0,
+        "win_rate_pct": 62.5,
+        "profit_factor": 1.248368608846232,
+        "total_trades": 16,
+        "avg_trade_pct": 0.0,
+        "best_trade_pct": 4.00642861212201,
+        "worst_trade_pct": -5.933753323338308,
+        "max_dd_duration": "320 days 00:00:00",
+        "total_fees": 126.46036914591357,
+        "trades_saved": "/app/reports/DOTUSDT_backtest/trades.csv",
+        "plots_saved": false
+      },
+      "portfolio": "Portfolio(**Config({\n    \"wrapper\": \"<vectorbt.base.array_wrapper.ArrayWrapper object at 0xffff52924e10> of shape (687,)\",\n    \"close\": \"<pandas.core.series.Series object at 0xffff52924a10> of shape (687,)\",\n    \"order_records\": \"<numpy.ndarray object at 0xffff5000d470> of shape (32,)\",\n    \"log_records\": \"<numpy.ndarray object at 0xffff5000d410> of shape (0,)\",\n    \"init_cash\": \"<numpy.ndarray object at 0xffff5000ea30> of shape (1,)\",\n    \"cash_sharing\": false,\n    \"call_seq\": null,\n    \"fillna_close\": null,\n    \"trades_type\": null\n}))"
+    }
+  },
+  "MATIC": {
+    "5m": {
+      "metrics": {
+        "final_value": 10312.617117574773,
+        "initial_value": 10000.0,
+        "total_return_pct": 3.1261711757477384,
+        "cagr_pct": 0.0,
+        "max_drawdown_pct": 1.8525878350243437,
+        "sharpe_ratio": 0.0,
+        "win_rate_pct": 83.33333333333334,
+        "profit_factor": 6.0067915722205,
+        "total_trades": 7,
+        "avg_trade_pct": 0.0,
+        "best_trade_pct": 1.4671571476831728,
+        "worst_trade_pct": -0.6087241725352995,
+        "max_dd_duration": "317 days 00:00:00",
+        "total_fees": 52.654811495152046,
+        "trades_saved": "/app/reports/MATICUSDT_backtest/trades.csv",
+        "plots_saved": false
+      },
+      "portfolio": "Portfolio(**Config({\n    \"wrapper\": \"<vectorbt.base.array_wrapper.ArrayWrapper object at 0xffff58507750> of shape (951,)\",\n    \"close\": \"<pandas.core.series.Series object at 0xffff58505ad0> of shape (951,)\",\n    \"order_records\": \"<numpy.ndarray object at 0xffff505c3ab0> of shape (13,)\",\n    \"log_records\": \"<numpy.ndarray object at 0xffff505c2c70> of shape (0,)\",\n    \"init_cash\": \"<numpy.ndarray object at 0xffff505c35d0> of shape (1,)\",\n    \"cash_sharing\": false,\n    \"call_seq\": null,\n    \"fillna_close\": null,\n    \"trades_type\": null\n}))"
+    },
+    "15m": {
+      "metrics": {
+        "final_value": 9131.561051169047,
+        "initial_value": 10000.0,
+        "total_return_pct": -8.68438948830953,
+        "cagr_pct": 0.0,
+        "max_drawdown_pct": 13.548957511010206,
+        "sharpe_ratio": 0.0,
+        "win_rate_pct": 25.0,
+        "profit_factor": 0.07894866663232811,
+        "total_trades": 4,
+        "avg_trade_pct": 0.0,
+        "best_trade_pct": 0.822211823299118,
+        "worst_trade_pct": -6.483776746322195,
+        "max_dd_duration": "898 days 00:00:00",
+        "total_fees": 30.002886016996413,
+        "trades_saved": "/app/reports/MATICUSDT_backtest/trades.csv",
+        "plots_saved": false
+      },
+      "portfolio": "Portfolio(**Config({\n    \"wrapper\": \"<vectorbt.base.array_wrapper.ArrayWrapper object at 0xffff59b02c10> of shape (951,)\",\n    \"close\": \"<pandas.core.series.Series object at 0xffff59b01890> of shape (951,)\",\n    \"order_records\": \"<numpy.ndarray object at 0xffff505f1830> of shape (8,)\",\n    \"log_records\": \"<numpy.ndarray object at 0xffff505f27f0> of shape (0,)\",\n    \"init_cash\": \"<numpy.ndarray object at 0xffff505f1590> of shape (1,)\",\n    \"cash_sharing\": false,\n    \"call_seq\": null,\n    \"fillna_close\": null,\n    \"trades_type\": null\n}))"
+    },
+    "1h": {
+      "metrics": {
+        "final_value": 7182.986792764257,
+        "initial_value": 10000.0,
+        "total_return_pct": -28.170132072357422,
+        "cagr_pct": 0.0,
+        "max_drawdown_pct": 31.807706500586118,
+        "sharpe_ratio": 0.0,
+        "win_rate_pct": 50.0,
+        "profit_factor": 0.018629136156850405,
+        "total_trades": 2,
+        "avg_trade_pct": 0.0,
+        "best_trade_pct": 0.5349610013556373,
+        "worst_trade_pct": -28.56361800687689,
+        "max_dd_duration": "552 days 00:00:00",
+        "total_fees": 14.915526149678282,
+        "trades_saved": "/app/reports/MATICUSDT_backtest/trades.csv",
+        "plots_saved": false
+      },
+      "portfolio": "Portfolio(**Config({\n    \"wrapper\": \"<vectorbt.base.array_wrapper.ArrayWrapper object at 0xffff53a245d0> of shape (671,)\",\n    \"close\": \"<pandas.core.series.Series object at 0xffff53a272d0> of shape (671,)\",\n    \"order_records\": \"<numpy.ndarray object at 0xffff52efc090> of shape (4,)\",\n    \"log_records\": \"<numpy.ndarray object at 0xffff52effed0> of shape (0,)\",\n    \"init_cash\": \"<numpy.ndarray object at 0xffff500b46f0> of shape (1,)\",\n    \"cash_sharing\": false,\n    \"call_seq\": null,\n    \"fillna_close\": null,\n    \"trades_type\": null\n}))"
+    }
+  },
+  "AVAX": {
+    "5m": {
+      "metrics": {
+        "final_value": 10756.949300775528,
+        "initial_value": 10000.0,
+        "total_return_pct": 7.56949300775529,
+        "cagr_pct": 0.0,
+        "max_drawdown_pct": 2.556455048998701,
+        "sharpe_ratio": 0.0,
+        "win_rate_pct": 100.0,
+        "profit_factor": 0.0,
+        "total_trades": 2,
+        "avg_trade_pct": 0.0,
+        "best_trade_pct": 3.893386883200739,
+        "worst_trade_pct": 3.5413120708387833,
+        "max_dd_duration": "447 days 00:00:00",
+        "total_fees": 16.61424990256873,
+        "trades_saved": "/app/reports/AVAXUSDT_backtest/trades.csv",
+        "plots_saved": false
+      },
+      "portfolio": "Portfolio(**Config({\n    \"wrapper\": \"<vectorbt.base.array_wrapper.ArrayWrapper object at 0xffff53ba8710> of shape (967,)\",\n    \"close\": \"<pandas.core.series.Series object at 0xffff53ba8750> of shape (967,)\",\n    \"order_records\": \"<numpy.ndarray object at 0xffff5878a910> of shape (4,)\",\n    \"log_records\": \"<numpy.ndarray object at 0xffff5878b8d0> of shape (0,)\",\n    \"init_cash\": \"<numpy.ndarray object at 0xffff5878bb70> of shape (1,)\",\n    \"cash_sharing\": false,\n    \"call_seq\": null,\n    \"fillna_close\": null,\n    \"trades_type\": null\n}))"
+    },
+    "15m": {
+      "metrics": {
+        "final_value": 10386.256765434076,
+        "initial_value": 10000.0,
+        "total_return_pct": 3.862567654340765,
+        "cagr_pct": 0.0,
+        "max_drawdown_pct": 6.353135313531352,
+        "sharpe_ratio": 0.0,
+        "win_rate_pct": 100.0,
+        "profit_factor": 0.0,
+        "total_trades": 2,
+        "avg_trade_pct": 0.0,
+        "best_trade_pct": 3.2706237091244708,
+        "worst_trade_pct": 0.5747002065717774,
+        "max_dd_duration": "221 days 00:00:00",
+        "total_fees": 16.416112412452307,
+        "trades_saved": "/app/reports/AVAXUSDT_backtest/trades.csv",
+        "plots_saved": false
+      },
+      "portfolio": "Portfolio(**Config({\n    \"wrapper\": \"<vectorbt.base.array_wrapper.ArrayWrapper object at 0xffff4fc5dd50> of shape (967,)\",\n    \"close\": \"<pandas.core.series.Series object at 0xffff4fc5cc90> of shape (967,)\",\n    \"order_records\": \"<numpy.ndarray object at 0xffff51b3e130> of shape (4,)\",\n    \"log_records\": \"<numpy.ndarray object at 0xffff5052d530> of shape (0,)\",\n    \"init_cash\": \"<numpy.ndarray object at 0xffff5052d1d0> of shape (1,)\",\n    \"cash_sharing\": false,\n    \"call_seq\": null,\n    \"fillna_close\": null,\n    \"trades_type\": null\n}))"
+    },
+    "1h": {
+      "metrics": {
+        "final_value": 10865.004914342831,
+        "initial_value": 10000.0,
+        "total_return_pct": 8.650049143428307,
+        "cagr_pct": 0.0,
+        "max_drawdown_pct": 9.408495434696308,
+        "sharpe_ratio": 0.0,
+        "win_rate_pct": 0.0,
+        "profit_factor": 0.0,
+        "total_trades": 1,
+        "avg_trade_pct": 0.0,
+        "best_trade_pct": 0.0,
+        "worst_trade_pct": 0.0,
+        "max_dd_duration": "167 days 00:00:00",
+        "total_fees": 3.998400639744432,
+        "trades_saved": "/app/reports/AVAXUSDT_backtest/trades.csv",
+        "plots_saved": false
+      },
+      "portfolio": "Portfolio(**Config({\n    \"wrapper\": \"<vectorbt.base.array_wrapper.ArrayWrapper object at 0xffff53494390> of shape (687,)\",\n    \"close\": \"<pandas.core.series.Series object at 0xffff534970d0> of shape (687,)\",\n    \"order_records\": \"<numpy.ndarray object at 0xffff51b12370> of shape (1,)\",\n    \"log_records\": \"<numpy.ndarray object at 0xffff51b12610> of shape (0,)\",\n    \"init_cash\": \"<numpy.ndarray object at 0xffff51b11230> of shape (1,)\",\n    \"cash_sharing\": false,\n    \"call_seq\": null,\n    \"fillna_close\": null,\n    \"trades_type\": null\n}))"
+    }
+  },
+  "LINK": {
+    "5m": {
+      "metrics": {
+        "final_value": 9148.370255649044,
+        "initial_value": 10000.0,
+        "total_return_pct": -8.516297443509558,
+        "cagr_pct": 0.0,
+        "max_drawdown_pct": 10.857553418257666,
+        "sharpe_ratio": 0.0,
+        "win_rate_pct": 48.148148148148145,
+        "profit_factor": 0.24164364297887697,
+        "total_trades": 28,
+        "avg_trade_pct": 0.0,
+        "best_trade_pct": 0.6479004738468649,
+        "worst_trade_pct": -2.331139901828482,
+        "max_dd_duration": "945 days 00:00:00",
+        "total_fees": 204.38349394418213,
+        "trades_saved": "/app/reports/LINKUSDT_backtest/trades.csv",
+        "plots_saved": false
+      },
+      "portfolio": "Portfolio(**Config({\n    \"wrapper\": \"<vectorbt.base.array_wrapper.ArrayWrapper object at 0xffff586a6d90> of shape (967,)\",\n    \"close\": \"<pandas.core.series.Series object at 0xffff586a74d0> of shape (967,)\",\n    \"order_records\": \"<numpy.ndarray object at 0xffff584a8150> of shape (55,)\",\n    \"log_records\": \"<numpy.ndarray object at 0xffff584a8b10> of shape (0,)\",\n    \"init_cash\": \"<numpy.ndarray object at 0xffff584a82d0> of shape (1,)\",\n    \"cash_sharing\": false,\n    \"call_seq\": null,\n    \"fillna_close\": null,\n    \"trades_type\": null\n}))"
+    },
+    "15m": {
+      "metrics": {
+        "final_value": 8965.961045570544,
+        "initial_value": 10000.0,
+        "total_return_pct": -10.34038954429456,
+        "cagr_pct": 0.0,
+        "max_drawdown_pct": 14.189861761106876,
+        "sharpe_ratio": 0.0,
+        "win_rate_pct": 63.63636363636363,
+        "profit_factor": 0.5073154260672329,
+        "total_trades": 33,
+        "avg_trade_pct": 0.0,
+        "best_trade_pct": 1.4507757163409054,
+        "worst_trade_pct": -4.568937724836543,
+        "max_dd_duration": "905 days 00:00:00",
+        "total_fees": 247.45853588389144,
+        "trades_saved": "/app/reports/LINKUSDT_backtest/trades.csv",
+        "plots_saved": false
+      },
+      "portfolio": "Portfolio(**Config({\n    \"wrapper\": \"<vectorbt.base.array_wrapper.ArrayWrapper object at 0xffff52679210> of shape (967,)\",\n    \"close\": \"<pandas.core.series.Series object at 0xffff5267a010> of shape (967,)\",\n    \"order_records\": \"<numpy.ndarray object at 0xffff51be0ab0> of shape (66,)\",\n    \"log_records\": \"<numpy.ndarray object at 0xffff58435590> of shape (0,)\",\n    \"init_cash\": \"<numpy.ndarray object at 0xffff51be0870> of shape (1,)\",\n    \"cash_sharing\": false,\n    \"call_seq\": null,\n    \"fillna_close\": null,\n    \"trades_type\": null\n}))"
+    },
+    "1h": {
+      "metrics": {
+        "final_value": 11234.221407128305,
+        "initial_value": 10000.0,
+        "total_return_pct": 12.342214071283042,
+        "cagr_pct": 0.0,
+        "max_drawdown_pct": 9.951801693638291,
+        "sharpe_ratio": 0.0,
+        "win_rate_pct": 69.23076923076923,
+        "profit_factor": 1.8008670868641392,
+        "total_trades": 13,
+        "avg_trade_pct": 0.0,
+        "best_trade_pct": 7.482415456158509,
+        "worst_trade_pct": -6.630710586058412,
+        "max_dd_duration": "196 days 00:00:00",
+        "total_fees": 110.08498824925397,
+        "trades_saved": "/app/reports/LINKUSDT_backtest/trades.csv",
+        "plots_saved": false
+      },
+      "portfolio": "Portfolio(**Config({\n    \"wrapper\": \"<vectorbt.base.array_wrapper.ArrayWrapper object at 0xffff51e2d2d0> of shape (687,)\",\n    \"close\": \"<pandas.core.series.Series object at 0xffff51e2ecd0> of shape (687,)\",\n    \"order_records\": \"<numpy.ndarray object at 0xffff4ffce0d0> of shape (26,)\",\n    \"log_records\": \"<numpy.ndarray object at 0xffff4ffcebb0> of shape (0,)\",\n    \"init_cash\": \"<numpy.ndarray object at 0xffff4ffccf30> of shape (1,)\",\n    \"cash_sharing\": false,\n    \"call_seq\": null,\n    \"fillna_close\": null,\n    \"trades_type\": null\n}))"
+    }
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "final_value": 9112.329896184625,
+  "initial_value": 10000.0,
+  "total_return_pct": -8.876701038153756,
+  "cagr_pct": 0.0,
+  "max_drawdown_pct": 21.43809623166947,
+  "sharpe_ratio": 0.0,
+  "win_rate_pct": 17.647058823529413,
+  "profit_factor": 0.4985416507496806,
+  "total_trades": 18,
+  "avg_trade_pct": 0.0,
+  "best_trade_pct": 9.168907621218715,
+  "worst_trade_pct": -2.8182416824574688,
+  "max_dd_duration": "637 days 00:00:00",
+  "total_fees": 137.40285814824526,
+  "trades_saved": "/app/reports/XRPUSDT_backtest/trades.csv",
+  "plots_saved": false
+}

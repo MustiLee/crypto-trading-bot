@@ -1,0 +1,18 @@
+{
+  "final_value": 11234.221407128305,
+  "initial_value": 10000.0,
+  "total_return_pct": 12.342214071283042,
+  "cagr_pct": 0.0,
+  "max_drawdown_pct": 9.951801693638291,
+  "sharpe_ratio": 0.0,
+  "win_rate_pct": 69.23076923076923,
+  "profit_factor": 1.8008670868641392,
+  "total_trades": 13,
+  "avg_trade_pct": 0.0,
+  "best_trade_pct": 7.482415456158509,
+  "worst_trade_pct": -6.630710586058412,
+  "max_dd_duration": "196 days 00:00:00",
+  "total_fees": 110.08498824925397,
+  "trades_saved": "/app/reports/LINKUSDT_backtest/trades.csv",
+  "plots_saved": false
+}

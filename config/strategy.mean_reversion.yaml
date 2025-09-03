@@ -1,0 +1,14 @@
+# Mean-Reversion Strategy - BB dominant, MACD supportive  
+# Focus on BB touches with MACD momentum confirmation
+bollinger: {length: 20, std: 1.5}
+macD: {fast: 12, slow: 26, signal: 9}
+rsi: {length: 14, use_filter: true, rsi_buy_max: 35, rsi_sell_min: 65}
+filters:
+  ema_trend:
+    use: false
+    length: 200
+    mode: long_only_above
+execution: {touch_tolerance_pct: 0.008, slippage_pct: 0.0005, fee_pct: 0.0004}
+risk: {use_atr: true, atr_length: 14, stop_mult: 1.8, trail_mult: 2.2}
+exits: {time_based: {use: true, max_bars_in_trade: 80}, midband_exit: {use: true}}
+backtest: {initial_cash: 10000, size_pct: 0.85, allow_short: false, plot: true}

@@ -1,47 +1,12 @@
-# Balanced Strategy Profile - Moderate risk/reward
-# Bollinger Bands + MACD crossover with balanced filters
-
-bollinger:
-  length: 20      # Standard BB period
-  std: 2.2        # Slightly wider than default
-
-macd:
-  fast: 10        # Slightly faster than default
-  slow: 24        # Slightly faster than default
-  signal: 9
-
-rsi:
-  length: 14
-  use_filter: true
-  rsi_buy_max: 40.0   # Moderate oversold threshold
-  rsi_sell_min: 60.0  # Moderate overbought threshold
-
+bollinger: {length: 20, std: 2.2}
+macD: {fast: 10, slow: 24, signal: 9}
+rsi: {length: 14, use_filter: true, rsi_buy_max: 40, rsi_sell_min: 60}
 filters:
   ema_trend:
     use: true
     length: 200
-    mode: "long_only_above"  # Only long trades when price > EMA200
-
-execution:
-  touch_tolerance_pct: 0.001  # 0.1% tolerance for BB touches
-  slippage_pct: 0.0005       # Standard slippage
-  fee_pct: 0.0004            # Standard fee estimate
-
-risk:
-  use_atr: true
-  atr_length: 14
-  stop_mult: 1.7     # Moderate stops (1.7x ATR)
-  trail_mult: 2.2    # Moderate trailing stops
-
-exits:
-  time_based:
-    use: true
-    max_bars_in_trade: 60  # Exit after 60 periods if no signal
-  midband_exit:
-    use: false  # Don't exit at midband - let trades run
-
-backtest:
-  initial_cash: 10000.0
-  size_pct: 0.90     # Use 90% of capital
-  allow_short: false
-  plot: true
+    mode: long_only_above
+execution: {touch_tolerance_pct: 0.001, slippage_pct: 0.0005, fee_pct: 0.0004}
+risk: {use_atr: true, atr_length: 14, stop_mult: 1.7, trail_mult: 2.2}
+exits: {time_based: {use: true, max_bars_in_trade: 60}, midband_exit: {use: false}}
+backtest: {initial_cash: 10000, size_pct: 0.99, allow_short: false, plot: true}

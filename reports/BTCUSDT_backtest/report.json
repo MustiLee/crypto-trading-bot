@@ -1,0 +1,18 @@
+{
+  "final_value": 9888.045321272517,
+  "initial_value": 10000.0,
+  "total_return_pct": -1.1195467872748277,
+  "cagr_pct": 0.0,
+  "max_drawdown_pct": 1.8025690019769436,
+  "sharpe_ratio": 0.0,
+  "win_rate_pct": 0.0,
+  "profit_factor": 0.0,
+  "total_trades": 1,
+  "avg_trade_pct": 0.0,
+  "best_trade_pct": -1.1199946059897488,
+  "worst_trade_pct": -1.1199946059897488,
+  "max_dd_duration": "466 days 00:00:00",
+  "total_fees": 7.955201488592978,
+  "trades_saved": "/app/reports/BTCUSDT_backtest/trades.csv",
+  "plots_saved": false
+}

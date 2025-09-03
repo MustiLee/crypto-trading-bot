@@ -1,0 +1,18 @@
+{
+  "final_value": 7182.986792764257,
+  "initial_value": 10000.0,
+  "total_return_pct": -28.170132072357422,
+  "cagr_pct": 0.0,
+  "max_drawdown_pct": 31.807706500586118,
+  "sharpe_ratio": 0.0,
+  "win_rate_pct": 50.0,
+  "profit_factor": 0.018629136156850405,
+  "total_trades": 2,
+  "avg_trade_pct": 0.0,
+  "best_trade_pct": 0.5349610013556373,
+  "worst_trade_pct": -28.56361800687689,
+  "max_dd_duration": "552 days 00:00:00",
+  "total_fees": 14.915526149678282,
+  "trades_saved": "/app/reports/MATICUSDT_backtest/trades.csv",
+  "plots_saved": false
+}

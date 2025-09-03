@@ -14,6 +14,22 @@ from loguru import logger
 from .multi_symbol_stream import MultiSymbolBinanceStream
 from .live_signals import LiveSignalGenerator, SignalType
 
+# Import mobile API router
+try:
+    from ..api.mobile_api import mobile_router
+    API_AVAILABLE = True
+    logger.info("Mobile API routes loaded successfully")
+except ImportError as e:
+    mobile_router = None
+    API_AVAILABLE = False
+    logger.warning(f"Mobile API routes not available: {e}")
+
+# Try to import auth router, but don't fail if dependencies missing
+# Temporarily disabled for testing
+auth_router = None
+AUTH_AVAILABLE = False
+logger.warning("Authentication routes disabled for testing")
+
 
 class MultiSymbolWebSocketManager:
     """Manage WebSocket connections for multiple symbols"""
@@ -96,6 +112,20 @@ class MultiSymbolTradingDashboard:
         # Setup routes
         self._setup_routes()
         
+        # Include authentication and strategy testing routes if available
+        if AUTH_AVAILABLE and auth_router:
+            self.app.include_router(auth_router)
+            logger.info("Authentication routes included")
+        else:
+            logger.warning("Authentication routes not available - running without user management")
+        
+        # Include mobile API routes
+        if API_AVAILABLE and mobile_router:
+            self.app.include_router(mobile_router)
+            logger.info("Mobile API routes included")
+        else:
+            logger.warning("Mobile API routes not available")
+        
         logger.info(f"Initialized multi-symbol dashboard for: {list(self.symbols.keys())}")
     
     def _setup_routes(self):
@@ -104,6 +134,12 @@ class MultiSymbolTradingDashboard:
         @self.app.get("/", response_class=HTMLResponse)
         async def dashboard():
             return self._get_multi_symbol_html()
+        
+        if AUTH_AVAILABLE:
+            @self.app.get("/strategy-tester", response_class=HTMLResponse)
+            async def strategy_tester():
+                """Serve the strategy tester page"""
+                return self._get_strategy_tester_html()
         
         @self.app.websocket("/ws")
         async def websocket_endpoint(websocket: WebSocket):
@@ -302,6 +338,9 @@ class MultiSymbolTradingDashboard:
         <div class="header">
             <h1>🚀 Multi-Symbol Trading Dashboard</h1>
             <p>Real-time cryptocurrency analysis for BTC, ETH & XRP</p>
+            <div style="margin-top: 15px;">
+                {f'<a href="/strategy-tester" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; padding: 10px 20px; border-radius: 20px; font-weight: bold;">🧪 Strateji Test</a>' if AUTH_AVAILABLE else '<span style="background: #666; color: white; padding: 10px 20px; border-radius: 20px; opacity: 0.5;">🧪 Strateji Test (Yakında)</span>'}
+            </div>
         </div>
         
         <div id="connectionStatus" class="connection-status status-disconnected">
@@ -427,10 +466,10 @@ class MultiSymbolTradingDashboard:
                 // Update price
                 const priceEl = document.getElementById(`price-${{symbol}}`);
                 if (priceEl) {{
-                    priceEl.textContent = `$$${{parseFloat(data.price).toLocaleString('en-US', {{
+                    priceEl.textContent = `$` + parseFloat(data.price).toLocaleString('en-US', {{
                         minimumFractionDigits: 2,
                         maximumFractionDigits: 8
-                    }})}}`;
+                    }});
                 }}
                 
                 // Update signal
@@ -516,6 +555,38 @@ class MultiSymbolTradingDashboard:
             await server.serve()
         finally:
             await self.stream.disconnect()
+    
+    def _get_strategy_tester_html(self) -> str:
+        """Generate strategy tester HTML"""
+        try:
+            # Read the strategy tester HTML file
+            html_path = Path(__file__).parent.parent.parent / "templates" / "strategy_tester.html"
+            with open(html_path, 'r', encoding='utf-8') as f:
+                return f.read()
+        except FileNotFoundError:
+            logger.error(f"Strategy tester HTML file not found at {html_path}")
+            return """
+            <html>
+                <head><title>Strategy Tester - File Not Found</title></head>
+                <body>
+                    <h1>Strategy Tester HTML file not found</h1>
+                    <p>Please ensure the strategy_tester.html file exists in the templates directory.</p>
+                    <a href="/">Back to Dashboard</a>
+                </body>
+            </html>
+            """
+        except Exception as e:
+            logger.error(f"Error loading strategy tester HTML: {e}")
+            return """
+            <html>
+                <head><title>Strategy Tester - Error</title></head>
+                <body>
+                    <h1>Error loading Strategy Tester</h1>
+                    <p>An error occurred while loading the strategy tester.</p>
+                    <a href="/">Back to Dashboard</a>
+                </body>
+            </html>
+            """
     
     async def stop(self):
         """Stop the dashboard"""

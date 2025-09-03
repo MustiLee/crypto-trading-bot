@@ -1,0 +1,18 @@
+{
+  "final_value": 11007.211068518329,
+  "initial_value": 10000.0,
+  "total_return_pct": 10.072110685183278,
+  "cagr_pct": 0.0,
+  "max_drawdown_pct": 10.035952514064537,
+  "sharpe_ratio": 0.0,
+  "win_rate_pct": 30.0,
+  "profit_factor": 1.7792447176018018,
+  "total_trades": 11,
+  "avg_trade_pct": 0.0,
+  "best_trade_pct": 15.291634640326283,
+  "worst_trade_pct": -2.9563702284634,
+  "max_dd_duration": "553 days 00:00:00",
+  "total_fees": 93.28306569308867,
+  "trades_saved": "/app/reports/ETHUSDT_backtest/trades.csv",
+  "plots_saved": false
+}

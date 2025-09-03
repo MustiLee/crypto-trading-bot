@@ -34,16 +34,6 @@ def build_signals(df: pd.DataFrame, cfg: StrategyConfig) -> tuple[pd.Series, pd.
         buy_signals = buy_signals & (df["RSI"] <= cfg.rsi.rsi_buy_max)
         sell_signals = sell_signals & (df["RSI"] >= cfg.rsi.rsi_sell_min)
     
-    # EMA trend filter - only allow long entries when price is above EMA
-    if cfg.filters.ema_trend.use:
-        if "EMA_TREND" not in df.columns:
-            raise ValueError("EMA trend filter enabled but EMA_TREND column not found")
-        
-        logger.debug(f"Applying EMA trend filter (length: {cfg.filters.ema_trend.length}, mode: {cfg.filters.ema_trend.mode})")
-        if cfg.filters.ema_trend.mode == "long_only_above":
-            # Only allow buy signals when close > EMA200
-            buy_signals = buy_signals & (df["close"] > df["EMA_TREND"])
-    
     buy_signals = buy_signals.astype(bool)
     sell_signals = sell_signals.astype(bool)
     

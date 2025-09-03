@@ -1,0 +1,18 @@
+{
+  "final_value": 9806.766908932668,
+  "initial_value": 10000.0,
+  "total_return_pct": -1.9323309106733189,
+  "cagr_pct": 0.0,
+  "max_drawdown_pct": 5.932767985185031,
+  "sharpe_ratio": 0.0,
+  "win_rate_pct": 50.0,
+  "profit_factor": 0.5360162428155351,
+  "total_trades": 4,
+  "avg_trade_pct": 0.0,
+  "best_trade_pct": 1.2071362469196874,
+  "worst_trade_pct": -3.443904269038528,
+  "max_dd_duration": "256 days 00:00:00",
+  "total_fees": 32.09483461057931,
+  "trades_saved": "/app/reports/BNBUSDT_backtest/trades.csv",
+  "plots_saved": false
+}

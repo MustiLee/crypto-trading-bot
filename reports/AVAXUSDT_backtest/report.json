@@ -1,0 +1,18 @@
+{
+  "final_value": 10882.142146068925,
+  "initial_value": 10000.0,
+  "total_return_pct": 8.82142146068925,
+  "cagr_pct": 0.0,
+  "max_drawdown_pct": 9.408495434696308,
+  "sharpe_ratio": 0.0,
+  "win_rate_pct": 0.0,
+  "profit_factor": 0.0,
+  "total_trades": 1,
+  "avg_trade_pct": 0.0,
+  "best_trade_pct": 0.0,
+  "worst_trade_pct": 0.0,
+  "max_dd_duration": "167 days 00:00:00",
+  "total_fees": 3.998400639744432,
+  "trades_saved": "/app/reports/AVAXUSDT_backtest/trades.csv",
+  "plots_saved": false
+}

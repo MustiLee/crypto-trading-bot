@@ -82,9 +82,11 @@ class MultiSymbolBacktester:
             strategy_config_path = f"config/strategy.{symbol_config['strategy']}.yaml"
             
             # Initialize backtest engine
+            strategy_type = symbol_config.get('strategy_type', 'flexible')
             engine = BacktestEngine(
                 strategy_config_path=strategy_config_path,
-                symbol=symbol_config['symbol']
+                symbol=symbol_config['symbol'],
+                strategy_type=strategy_type
             )
             
             # Run backtest

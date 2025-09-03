@@ -1,0 +1,18 @@
+{
+  "final_value": 10364.34153271555,
+  "initial_value": 10000.0,
+  "total_return_pct": 3.643415327155508,
+  "cagr_pct": 0.0,
+  "max_drawdown_pct": 10.424741389582431,
+  "sharpe_ratio": 0.0,
+  "win_rate_pct": 62.5,
+  "profit_factor": 1.248368608846232,
+  "total_trades": 16,
+  "avg_trade_pct": 0.0,
+  "best_trade_pct": 4.00642861212201,
+  "worst_trade_pct": -5.933753323338308,
+  "max_dd_duration": "320 days 00:00:00",
+  "total_fees": 126.46036914591357,
+  "trades_saved": "/app/reports/DOTUSDT_backtest/trades.csv",
+  "plots_saved": false
+}

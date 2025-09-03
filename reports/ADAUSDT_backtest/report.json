@@ -1,0 +1,18 @@
+{
+  "final_value": 9819.175413353802,
+  "initial_value": 10000.0,
+  "total_return_pct": -1.8082458664619883,
+  "cagr_pct": 0.0,
+  "max_drawdown_pct": 26.564469939821535,
+  "sharpe_ratio": 0.0,
+  "win_rate_pct": 25.0,
+  "profit_factor": 0.9520244091168015,
+  "total_trades": 17,
+  "avg_trade_pct": 0.0,
+  "best_trade_pct": 16.444532546297868,
+  "worst_trade_pct": -4.868002958758436,
+  "max_dd_duration": "490 days 00:00:00",
+  "total_fees": 139.93073862329678,
+  "trades_saved": "/app/reports/ADAUSDT_backtest/trades.csv",
+  "plots_saved": false
+}

@@ -5,26 +5,85 @@ symbols:
     display_name: "Bitcoin"
     min_notional: 10
     precision: 2
-    strategy: "realistic1"
+    strategy: "quality_over_quantity"
+    strategy_type: "quality_over_quantity"
     
   ETH:
     symbol: "ETHUSDT" 
     display_name: "Ethereum"
     min_notional: 10
     precision: 2
-    strategy: "eth_optimized"
+    strategy: "trend_momentum"
+    strategy_type: "trend_momentum"
     
   XRP:
     symbol: "XRPUSDT"
     display_name: "Ripple"
     min_notional: 10
     precision: 4
-    strategy: "xrp_optimized"
+    strategy: "volatility_breakout"
+    strategy_type: "volatility_breakout"
+    
+  BNB:
+    symbol: "BNBUSDT"
+    display_name: "Binance Coin"
+    min_notional: 10
+    precision: 2
+    strategy: "quality_over_quantity"
+    strategy_type: "quality_over_quantity"
+    
+  ADA:
+    symbol: "ADAUSDT"
+    display_name: "Cardano"
+    min_notional: 10
+    precision: 4
+    strategy: "trend_momentum"
+    strategy_type: "trend_momentum"
+    
+  SOL:
+    symbol: "SOLUSDT"
+    display_name: "Solana"
+    min_notional: 10
+    precision: 2
+    strategy: "volatility_breakout"
+    strategy_type: "volatility_breakout"
+    
+  DOT:
+    symbol: "DOTUSDT"
+    display_name: "Polkadot"
+    min_notional: 10
+    precision: 3
+    strategy: "signal_rich"
+    strategy_type: "signal_rich"
+    
+  POL:
+    symbol: "POLUSDT"
+    display_name: "Polygon"
+    min_notional: 10
+    precision: 4
+    strategy: "trend_following"
+    strategy_type: "trend_following"
+    
+  AVAX:
+    symbol: "AVAXUSDT"
+    display_name: "Avalanche"
+    min_notional: 10
+    precision: 3
+    strategy: "mean_reversion"
+    strategy_type: "mean_reversion"
+    
+  LINK:
+    symbol: "LINKUSDT"
+    display_name: "Chainlink"
+    min_notional: 10
+    precision: 3
+    strategy: "signal_rich"
+    strategy_type: "signal_rich"
 
 # Global settings
 timeframes: ["5m", "15m", "1h"]
 default_timeframe: "5m"
 
 # Dashboard settings  
-display_order: ["BTC", "ETH", "XRP"]
+display_order: ["BTC", "ETH", "XRP", "BNB", "ADA", "SOL", "DOT", "POL", "AVAX", "LINK"]
 auto_refresh_seconds: 2

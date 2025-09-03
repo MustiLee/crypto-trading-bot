@@ -1,5 +1,6 @@
 import asyncio
 import json
+import os
 from datetime import datetime
 from typing import Dict, List
 from pathlib import Path
@@ -7,10 +8,13 @@ from pathlib import Path
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
+from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 from loguru import logger
 
 from .live_signals import LiveSignalGenerator, SignalType
+from ..database.db_manager import TradingDBManager
+from ..user_management.auth_routes import router as auth_router
 
 
 class WebSocketManager:
@@ -68,6 +72,12 @@ class TradingDashboardServer:
         # WebSocket manager
         self.ws_manager = WebSocketManager()
         
+        # DB manager for auth checks
+        self.db_manager = TradingDBManager()
+        
+        # WS auth requirement (can disable for local dev with WS_REQUIRE_AUTH=false)
+        self.ws_auth_required = os.getenv("WS_REQUIRE_AUTH", "true").lower() == "true"
+        
         # Live signal generator
         self.signal_generator = LiveSignalGenerator(
             symbol=symbol, 
@@ -77,6 +87,20 @@ class TradingDashboardServer:
         
         # Setup routes
         self._setup_routes()
+        
+        # Enable CORS for mobile (React Native) clients
+        cors_origins_env = os.getenv("CORS_ORIGINS", "*")
+        allowed_origins = [o.strip() for o in cors_origins_env.split(",")] if cors_origins_env else ["*"]
+        self.app.add_middleware(
+            CORSMiddleware,
+            allow_origins=allowed_origins,
+            allow_credentials=True,
+            allow_methods=["*"],
+            allow_headers=["*"],
+        )
+        
+        # Include authentication and strategy testing routes
+        self.app.include_router(auth_router)
         
         logger.info(f"Trading dashboard server initialized for {symbol.upper()} {interval}")
     
@@ -88,22 +112,62 @@ class TradingDashboardServer:
             """Serve the main dashboard page"""
             return self._get_dashboard_html()
         
+        @self.app.get("/strategy-tester", response_class=HTMLResponse)
+        async def strategy_tester():
+            """Serve the strategy tester page"""
+            return self._get_strategy_tester_html()
+        
         @self.app.get("/api/market-data")
         async def get_market_data():
             """Get current market data"""
             return self.signal_generator.get_current_market_data()
         
         @self.app.get("/api/signals")
-        async def get_signals():
-            """Get signal history"""
-            return {
-                "signals": self.signal_generator.get_signal_history(),
-                "current_signal": self.signal_generator.last_signal.value if self.signal_generator.last_signal else "NEUTRAL"
-            }
+        async def get_signals(limit: int = 50, cursor: int = 0):
+            """Get signal history with simple pagination (limit + cursor offset)"""
+            try:
+                history = self.signal_generator.get_signal_history()
+                total = len(history)
+                # Clamp inputs
+                limit = max(1, min(200, limit))
+                cursor = max(0, cursor)
+                # Slice window
+                slice_end = min(total, cursor + limit)
+                items = history[cursor:slice_end]
+                next_cursor = slice_end if slice_end < total else None
+                return {
+                    "items": items,
+                    "next_cursor": next_cursor,
+                    "total": total
+                }
+            except Exception as e:
+                logger.error(f"/api/signals error: {e}")
+                return {
+                    "error": {
+                        "code": "SIGNALS_FETCH_FAILED",
+                        "message": "Failed to fetch signal history"
+                    }
+                }
         
         @self.app.websocket("/ws")
         async def websocket_endpoint(websocket: WebSocket):
             """WebSocket endpoint for real-time updates"""
+            # Optional auth for WebSocket using query param token
+            if self.ws_auth_required:
+                try:
+                    token = websocket.query_params.get("token")
+                except Exception:
+                    token = None
+                if not token:
+                    logger.warning("WebSocket connection rejected: missing token")
+                    await websocket.close(code=1008)
+                    return
+                is_valid = await self._validate_ws_token(token)
+                if not is_valid:
+                    logger.warning("WebSocket connection rejected: invalid/expired token")
+                    await websocket.close(code=1008)
+                    return
+
             await self.ws_manager.connect(websocket)
             try:
                 # Send initial data with market data and signal history
@@ -129,6 +193,26 @@ class TradingDashboardServer:
                 logger.error(f"WebSocket error: {e}")
                 self.ws_manager.disconnect(websocket)
     
+    async def _validate_ws_token(self, token: str) -> bool:
+        """Validate WebSocket auth token against active sessions"""
+        try:
+            with self.db_manager.get_connection() as conn:
+                with conn.cursor() as cursor:
+                    cursor.execute(
+                        """
+                        SELECT 1 FROM users u
+                        JOIN user_sessions us ON u.id = us.user_id
+                        WHERE us.session_token = %s AND us.expires_at > NOW()
+                        LIMIT 1;
+                        """,
+                        (token,),
+                    )
+                    row = cursor.fetchone()
+                    return bool(row)
+        except Exception as e:
+            logger.error(f"WS token validation error: {e}")
+            return False
+
     async def _on_signal_update(self, signal_data: Dict):
         """Handle signal updates from LiveSignalGenerator"""
         try:
@@ -205,6 +289,30 @@ class TradingDashboardServer:
             color: #2c3e50;
             font-size: 2.5rem;
             margin-bottom: 10px;
+        }
+        
+        .nav-links {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .nav-link {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-weight: bold;
+            transition: transform 0.3s ease;
+            border: none;
+        }
+        
+        .nav-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            color: white;
         }
         
         .header .subtitle {
@@ -419,6 +527,10 @@ class TradingDashboardServer:
         <div class="header">
             <h1>🚀 Live Trading Dashboard</h1>
             <p class="subtitle">Bollinger Bands + MACD Strategy (Realistic1 - Winner Configuration)</p>
+            <div class="nav-links">
+                <a href="/" class="nav-link">📊 Ana Dashboard</a>
+                <a href="/strategy-tester" class="nav-link">🧪 Strateji Test</a>
+            </div>
             <div id="connection-status" class="status status-disconnected">
                 Connecting...
             </div>
@@ -487,6 +599,18 @@ class TradingDashboardServer:
     </div>
     
     <script>
+        // Currency formatter (single source of truth)
+        function formatUSD(value) {
+            const num = Number(value);
+            if (Number.isNaN(num)) return '--';
+            return num.toLocaleString('en-US', {
+                style: 'currency',
+                currency: 'USD',
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        }
+
         class TradingDashboard {
             constructor() {
                 this.ws = null;
@@ -572,7 +696,7 @@ class TradingDashboardServer:
                 // Update price
                 const priceElement = document.getElementById('current-price');
                 const currentPrice = parseFloat(data.price);
-                priceElement.textContent = `$${currentPrice.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                priceElement.textContent = formatUSD(currentPrice);
                 
                 // Update price change color
                 const priceChangeElement = document.getElementById('price-change');
@@ -598,10 +722,10 @@ class TradingDashboardServer:
                         macdElement.textContent = data.indicators.macd.toFixed(4);
                     }
                     if (data.indicators.bb_lower) {
-                        bbLowerElement.textContent = data.indicators.bb_lower.toFixed(2);
+                        bbLowerElement.textContent = formatUSD(data.indicators.bb_lower);
                     }
                     if (data.indicators.bb_upper) {
-                        bbUpperElement.textContent = data.indicators.bb_upper.toFixed(2);
+                        bbUpperElement.textContent = formatUSD(data.indicators.bb_upper);
                     }
                 }
                 
@@ -641,7 +765,7 @@ class TradingDashboardServer:
                 // Update price display with live data
                 const priceElement = document.getElementById('current-price');
                 const currentPrice = parseFloat(data.price);
-                priceElement.textContent = `$${currentPrice.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                priceElement.textContent = formatUSD(currentPrice);
                 
                 // Update price change with animation
                 const priceChangeElement = document.getElementById('price-change');
@@ -674,10 +798,10 @@ class TradingDashboardServer:
                         macdElement.textContent = data.indicators.macd.toFixed(4);
                     }
                     if (data.indicators.bb_lower) {
-                        bbLowerElement.textContent = `$${data.indicators.bb_lower.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                        bbLowerElement.textContent = formatUSD(data.indicators.bb_lower);
                     }
                     if (data.indicators.bb_upper) {
-                        bbUpperElement.textContent = `$${data.indicators.bb_upper.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                        bbUpperElement.textContent = formatUSD(data.indicators.bb_upper);
                     }
                 }
                 
@@ -736,11 +860,11 @@ class TradingDashboardServer:
                 
                 const historyHtml = this.signalHistory.map(signal => {
                     const time = new Date(signal.timestamp).toLocaleTimeString();
-                    const price = parseFloat(signal.price).toFixed(2);
+                    const price = formatUSD(parseFloat(signal.price));
                     return `
                         <div class="signal-item ${signal.signal.toLowerCase()}">
                             <div>
-                                <strong>${signal.signal}</strong> at $${price}
+                                <strong>${signal.signal}</strong> at ${price}
                                 <br><small>RSI: ${signal.rsi ? signal.rsi.toFixed(1) : 'N/A'}</small>
                             </div>
                             <div>${time}</div>
@@ -755,7 +879,7 @@ class TradingDashboardServer:
                 // Browser notification (if permission granted)
                 if (Notification.permission === 'granted') {
                     new Notification(`Trading Signal: ${signalData.signal}`, {
-                        body: `BTC/USDT at $${parseFloat(signalData.price).toFixed(2)}`,
+                        body: `BTC/USDT at ${formatUSD(parseFloat(signalData.price))}`,
                         icon: signalData.signal === 'BUY' ? '🟢' : '🔴'
                     });
                 }
@@ -773,6 +897,38 @@ class TradingDashboardServer:
 </body>
 </html>
         '''
+    
+    def _get_strategy_tester_html(self) -> str:
+        """Generate strategy tester HTML"""
+        try:
+            # Read the strategy tester HTML file
+            html_path = Path(__file__).parent.parent.parent / "templates" / "strategy_tester.html"
+            with open(html_path, 'r', encoding='utf-8') as f:
+                return f.read()
+        except FileNotFoundError:
+            logger.error(f"Strategy tester HTML file not found at {html_path}")
+            return """
+            <html>
+                <head><title>Strategy Tester - File Not Found</title></head>
+                <body>
+                    <h1>Strategy Tester HTML file not found</h1>
+                    <p>Please ensure the strategy_tester.html file exists in the templates directory.</p>
+                    <a href="/">Back to Dashboard</a>
+                </body>
+            </html>
+            """
+        except Exception as e:
+            logger.error(f"Error loading strategy tester HTML: {e}")
+            return """
+            <html>
+                <head><title>Strategy Tester - Error</title></head>
+                <body>
+                    <h1>Error loading Strategy Tester</h1>
+                    <p>An error occurred while loading the strategy tester.</p>
+                    <a href="/">Back to Dashboard</a>
+                </body>
+            </html>
+            """
     
     async def start(self):
         """Start the trading dashboard server"""

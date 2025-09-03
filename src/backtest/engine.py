@@ -26,13 +26,9 @@ def run_backtest(
     entries = buy_signals
     exits = sell_signals
     
-    # Apply advanced exit conditions
-    if hasattr(cfg, 'exits'):
-        exits = apply_advanced_exits(df, buy_signals, sell_signals, cfg, entries)
-    
     if not cfg.backtest.allow_short:
         logger.debug("Long-only mode: exits on sell signals or opposite entry signals")
-        exits = exits | (buy_signals.shift(1).fillna(False) & sell_signals)
+        exits = sell_signals | (buy_signals.shift(1).fillna(False) & sell_signals)
     
     logger.debug(f"Backtest parameters:")
     logger.debug(f"  Initial cash: ${cfg.backtest.initial_cash:,.2f}")
@@ -258,126 +254,56 @@ def print_backtest_summary(report: dict) -> None:
     logger.info("="*60)
 
 
-def apply_advanced_exits(
-    df: pd.DataFrame, 
-    buy_signals: pd.Series, 
-    sell_signals: pd.Series, 
-    cfg: StrategyConfig,
-    entries: pd.Series
-) -> pd.Series:
-    """Apply advanced exit conditions (ATR stops, time-based, midband exits)"""
+class BacktestEngine:
+    """Backtest engine for running strategy backtests"""
     
-    exits = sell_signals.copy()
-    
-    # Time-based exit
-    if cfg.exits.time_based.use:
-        logger.debug(f"Applying time-based exit (max bars: {cfg.exits.time_based.max_bars_in_trade})")
-        time_exits = pd.Series(False, index=df.index)
+    def __init__(self, strategy_config_path: str, symbol: str, strategy_type: str = "flexible"):
+        from src.utils.config import load_strategy_config
+        from pathlib import Path
         
-        # Track positions and their entry times
-        position = False
-        entry_time = None
+        config_path = Path(strategy_config_path)
+        if not config_path.exists():
+            config_path = Path(f"/app/{strategy_config_path}")
         
-        for i, (timestamp, entry_signal) in enumerate(entries.items()):
-            if entry_signal and not position:
-                position = True
-                entry_time = i
-            elif exits[timestamp] and position:
-                position = False
-                entry_time = None
-            elif position and entry_time is not None:
-                bars_in_trade = i - entry_time
-                if bars_in_trade >= cfg.exits.time_based.max_bars_in_trade:
-                    time_exits[timestamp] = True
-                    position = False
-                    entry_time = None
+        self.config = load_strategy_config(config_path)
+        self.symbol = symbol
+        self.strategy_type = strategy_type
         
-        exits = exits | time_exits
-    
-    # Midband exit (exit longs at BB middle band)
-    if cfg.exits.midband_exit.use:
-        logger.debug("Applying midband exit (BB middle band)")
-        if "BBM" not in df.columns:
-            logger.warning("Midband exit enabled but BBM column not found")
-        else:
-            midband_exits = pd.Series(False, index=df.index)
+    def run_backtest(self, df):
+        """Run backtest on provided DataFrame"""
+        from src.indicators.factory import add_indicators
+        from src.strategy.bb_macd_strategy import build_signals
+        from src.strategy.flexible_strategy import build_flexible_signals
+        from src.strategy.advanced_strategy import build_advanced_signals
+        
+        try:
+            # Add indicators
+            logger.info(f"Adding indicators for {self.symbol}...")
+            df_with_indicators = add_indicators(df.copy(), self.config)
             
-            # Track positions
-            position = False
+            # Generate signals based on strategy type
+            logger.info(f"Generating {self.strategy_type} signals for {self.symbol}...")
+            if self.strategy_type in ["signal_rich", "trend_following", "mean_reversion"]:
+                buy_signals, sell_signals = build_flexible_signals(df_with_indicators, self.config, self.strategy_type)
+            elif self.strategy_type in ["quality_over_quantity", "trend_momentum", "volatility_breakout"]:
+                buy_signals, sell_signals = build_advanced_signals(df_with_indicators, self.config, self.strategy_type)
+            else:
+                # Use original BB-MACD strategy
+                buy_signals, sell_signals = build_signals(df_with_indicators, self.config)
             
-            for i, (timestamp, entry_signal) in enumerate(entries.items()):
-                if entry_signal and not position:
-                    position = True
-                elif exits[timestamp] and position:
-                    position = False
-                elif position and i > 0:
-                    # Exit when price crosses above BB middle band (for longs)
-                    prev_close = df["close"].iloc[i-1]
-                    curr_close = df["close"].iloc[i]
-                    bb_mid = df["BBM"].iloc[i]
-                    
-                    if prev_close < bb_mid and curr_close >= bb_mid:
-                        midband_exits[timestamp] = True
-                        position = False
+            # Run backtest
+            logger.info(f"Running backtest for {self.symbol}...")
+            portfolio = run_backtest(df_with_indicators, buy_signals, sell_signals, self.config)
             
-            exits = exits | midband_exits
-    
-    # ATR-based stops and trailing stops
-    if cfg.risk.use_atr:
-        logger.debug(f"Applying ATR-based stops (stop_mult: {cfg.risk.stop_mult}, trail_mult: {cfg.risk.trail_mult})")
-        if "ATR" not in df.columns:
-            logger.warning("ATR risk management enabled but ATR column not found")
-        else:
-            atr_exits = pd.Series(False, index=df.index)
+            # Create report
+            output_dir = Path(f"/app/reports/{self.symbol}_backtest")
+            report = create_backtest_report(
+                portfolio, df_with_indicators, buy_signals, sell_signals, 
+                self.config, output_dir
+            )
             
-            # Track positions and stops
-            position = False
-            entry_price = None
-            stop_loss = None
-            trailing_stop = None
-            highest_price = None
+            return {"metrics": report, "portfolio": portfolio}
             
-            for i, (timestamp, entry_signal) in enumerate(entries.items()):
-                current_price = df["close"].iloc[i]
-                atr_value = df["ATR"].iloc[i]
-                
-                if entry_signal and not position:
-                    # Enter position
-                    position = True
-                    entry_price = current_price
-                    stop_loss = entry_price - (cfg.risk.stop_mult * atr_value)
-                    trailing_stop = None
-                    highest_price = current_price
-                    
-                elif exits[timestamp] and position:
-                    # Regular exit
-                    position = False
-                    entry_price = None
-                    stop_loss = None
-                    trailing_stop = None
-                    highest_price = None
-                    
-                elif position:
-                    # Update highest price for trailing stop
-                    if current_price > highest_price:
-                        highest_price = current_price
-                        # Update trailing stop
-                        new_trailing = highest_price - (cfg.risk.trail_mult * atr_value)
-                        if trailing_stop is None or new_trailing > trailing_stop:
-                            trailing_stop = new_trailing
-                    
-                    # Check stop conditions
-                    hit_stop = current_price <= stop_loss
-                    hit_trailing = trailing_stop is not None and current_price <= trailing_stop
-                    
-                    if hit_stop or hit_trailing:
-                        atr_exits[timestamp] = True
-                        position = False
-                        entry_price = None
-                        stop_loss = None
-                        trailing_stop = None
-                        highest_price = None
-            
-            exits = exits | atr_exits
-    
-    return exits
+        except Exception as e:
+            logger.error(f"Backtest failed for {self.symbol}: {e}")
+            return None
