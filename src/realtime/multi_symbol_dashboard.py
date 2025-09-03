@@ -8,6 +8,7 @@ import yaml
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
+from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 from loguru import logger
 
@@ -80,6 +81,16 @@ class MultiSymbolTradingDashboard:
     
     def __init__(self, interval: str = "5m", port: int = 8000):
         self.app = FastAPI(title="Multi-Symbol Trading Dashboard")
+        
+        # Add CORS middleware
+        self.app.add_middleware(
+            CORSMiddleware,
+            allow_origins=["http://localhost:8081", "http://localhost:8082", "http://127.0.0.1:8081", "http://127.0.0.1:8082"],
+            allow_credentials=True,
+            allow_methods=["*"],
+            allow_headers=["*"],
+        )
+        
         self.port = port
         self.interval = interval
         

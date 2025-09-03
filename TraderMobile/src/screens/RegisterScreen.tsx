@@ -40,7 +40,7 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
   const [verificationCode, setVerificationCode] = useState('');
   const [generatedCode, setGeneratedCode] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { register } = useAuth();
+  const { register, login } = useAuth();
 
   const handleInputChange = (field: string, value: string) => {
     if (field === 'phone') {
@@ -146,11 +146,28 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
       const result = await apiService.verifyEmail(formData.email, verificationCode);
 
       if (result.success) {
-        Alert.alert(
-          'Başarılı',
-          result.message,
-          [{ text: 'Tamam', onPress: () => navigation.navigate('Login') }]
-        );
+        // Verification successful, now auto-login the user
+        const loginSuccess = await login(formData.email, formData.password);
+        
+        if (loginSuccess) {
+          Alert.alert(
+            'Başarılı',
+            'Hesabınız başarıyla oluşturuldu ve giriş yapıldı!',
+            [{ text: 'Tamam', onPress: () => {
+              if (navigation.canGoBack()) {
+                navigation.goBack();
+              } else {
+                navigation.navigate('MainTabs' as any);
+              }
+            }}]
+          );
+        } else {
+          Alert.alert(
+            'Hesap Oluşturuldu',
+            'Hesabınız başarıyla oluşturuldu. Lütfen giriş yapın.',
+            [{ text: 'Tamam', onPress: () => navigation.navigate('Login') }]
+          );
+        }
       } else {
         Alert.alert('Hata', result.message);
       }

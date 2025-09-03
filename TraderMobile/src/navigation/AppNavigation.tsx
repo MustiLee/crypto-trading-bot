@@ -23,18 +23,22 @@ const AuthNavigator = () => (
   </AuthStack.Navigator>
 );
 
-const ProfileScreen = () => {
+const ProfileScreen = ({ navigation }: any) => {
   const { user, logout } = useAuth();
 
   const handleLogout = async () => {
     await logout();
   };
 
+  const handleLogin = () => {
+    navigation.navigate('AuthStack');
+  };
+
   return (
     <View style={profileStyles.container}>
       <Text style={profileStyles.title}>👤 Profil</Text>
       
-      {user && (
+      {user ? (
         <View style={profileStyles.userInfo}>
           <Text style={profileStyles.userName}>{user.first_name} {user.last_name}</Text>
           <Text style={profileStyles.userEmail}>{user.email}</Text>
@@ -43,6 +47,15 @@ const ProfileScreen = () => {
           
           <TouchableOpacity style={profileStyles.logoutButton} onPress={handleLogout}>
             <Text style={profileStyles.logoutText}>🚪 Çıkış Yap</Text>
+          </TouchableOpacity>
+        </View>
+      ) : (
+        <View style={profileStyles.userInfo}>
+          <Text style={profileStyles.guestTitle}>Misafir Modunda</Text>
+          <Text style={profileStyles.guestText}>Stratejileri kaydetmek için giriş yapın</Text>
+          
+          <TouchableOpacity style={profileStyles.loginButton} onPress={handleLogin}>
+            <Text style={profileStyles.loginText}>🔑 Giriş Yap</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -114,7 +127,7 @@ const MainTabNavigator = () => (
 );
 
 const AppNavigation = () => {
-  const { isLoading, isAuthenticated } = useAuth();
+  const { isLoading } = useAuth();
 
   if (isLoading) {
     return (
@@ -127,18 +140,13 @@ const AppNavigation = () => {
   return (
     <NavigationContainer>
       <RootStack.Navigator screenOptions={{ headerShown: false }}>
-        {isAuthenticated ? (
-          <>
-            <RootStack.Screen name="MainTabs" component={MainTabNavigator} />
-            <RootStack.Screen 
-              name="StrategyTest" 
-              component={StrategyTestScreen}
-              options={{ presentation: 'modal' }}
-            />
-          </>
-        ) : (
-          <RootStack.Screen name="AuthStack" component={AuthNavigator} />
-        )}
+        <RootStack.Screen name="MainTabs" component={MainTabNavigator} />
+        <RootStack.Screen name="AuthStack" component={AuthNavigator} />
+        <RootStack.Screen 
+          name="StrategyTest" 
+          component={StrategyTestScreen}
+          options={{ presentation: 'modal' }}
+        />
       </RootStack.Navigator>
     </NavigationContainer>
   );
@@ -193,6 +201,31 @@ const profileStyles = StyleSheet.create({
     marginTop: 20,
   },
   logoutText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  guestTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  guestText: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  loginButton: {
+    backgroundColor: '#667eea',
+    paddingHorizontal: 30,
+    paddingVertical: 12,
+    borderRadius: 25,
+    marginTop: 10,
+  },
+  loginText: {
     color: 'white',
     fontSize: 16,
     fontWeight: '600',
