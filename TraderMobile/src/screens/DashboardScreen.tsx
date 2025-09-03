@@ -48,6 +48,7 @@ const DashboardScreen: React.FC = () => {
     AVAX: { symbol: 'AVAXUSDT', display_name: 'Avalanche', precision: 3, strategy_type: 'mean_reversion' },
     LINK: { symbol: 'LINKUSDT', display_name: 'Chainlink', precision: 3, strategy_type: 'signal_rich' },
   };
+  const symbols = ['BTC', 'ETH', 'XRP', 'BNB', 'ADA', 'SOL', 'DOT', 'POL', 'AVAX', 'LINK'];
 
   const buildInitialData = (): { [key: string]: CryptoCard } => {
     const initial: { [key: string]: CryptoCard } = {};
@@ -73,7 +74,7 @@ const DashboardScreen: React.FC = () => {
   const wsRef = useRef<WebSocket | null>(null);
   const { user } = useAuth();
 
-  const symbols = ['BTC', 'ETH', 'XRP', 'BNB', 'ADA', 'SOL', 'DOT', 'POL', 'AVAX', 'LINK'];
+  
 
   useEffect(() => {
     connectWebSocket();
