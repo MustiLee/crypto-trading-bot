@@ -72,6 +72,9 @@ class TradingDashboardServer:
         # WebSocket manager
         self.ws_manager = WebSocketManager()
         
+        # Feature flags / config
+        self.enable_inline_ui = os.getenv("ENABLE_INLINE_UI", "false").lower() == "true"
+
         # DB manager for auth checks
         self.db_manager = TradingDBManager()
         
@@ -110,11 +113,15 @@ class TradingDashboardServer:
         @self.app.get("/", response_class=HTMLResponse)
         async def dashboard():
             """Serve the main dashboard page"""
+            if not self.enable_inline_ui:
+                return self._get_ui_disabled_html()
             return self._get_dashboard_html()
         
         @self.app.get("/strategy-tester", response_class=HTMLResponse)
         async def strategy_tester():
             """Serve the strategy tester page"""
+            if not self.enable_inline_ui:
+                return self._get_ui_disabled_html()
             return self._get_strategy_tester_html()
         
         @self.app.get("/api/market-data")
@@ -895,6 +902,38 @@ class TradingDashboardServer:
         const dashboard = new TradingDashboard();
     </script>
 </body>
+</html>
+        '''
+
+    def _get_ui_disabled_html(self) -> str:
+        """Minimal placeholder when inline UI is disabled (mobile-first API mode)"""
+        return '''
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Trading API</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 24px; }
+    .card { max-width: 720px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 12px; padding: 24px; }
+    h1 { margin: 0 0 8px; }
+    code { background: #f3f4f6; padding: 2px 6px; border-radius: 4px; }
+    a { color: #2563eb; text-decoration: none; }
+  </style>
+  </head>
+  <body>
+    <div class="card">
+      <h1>Trading API</h1>
+      <p>The inline web UI is disabled. This service exposes REST + WebSocket for the React Native app.</p>
+      <ul>
+        <li>OpenAPI: <code>/openapi.json</code> (generated via scripts/export_openapi.py)</li>
+        <li>Signals: <code>/api/signals?limit=50&cursor=0</code></li>
+        <li>WebSocket: <code>/ws?token=&lt;session_token&gt;</code></li>
+      </ul>
+      <p>Enable legacy UI by setting <code>ENABLE_INLINE_UI=true</code>.</p>
+    </div>
+  </body>
 </html>
         '''
     

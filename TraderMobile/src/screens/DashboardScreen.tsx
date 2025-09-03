@@ -92,12 +92,13 @@ const DashboardScreen: React.FC = () => {
       wsRef.current = ws;
 
       ws.onopen = () => {
-        console.log('WebSocket connected');
+        console.log('WebSocket connected successfully');
         setConnectionStatus('connected');
       };
 
       ws.onmessage = (event) => {
         try {
+          console.log('WebSocket message received:', event.data);
           const message: WebSocketMessage = JSON.parse(event.data);
           handleWebSocketMessage(message);
         } catch (error) {
@@ -110,6 +111,7 @@ const DashboardScreen: React.FC = () => {
         setConnectionStatus('disconnected');
         // Attempt to reconnect after 5 seconds
         setTimeout(() => {
+          console.log('Attempting to reconnect WebSocket...');
           connectWebSocket();
         }, 5000);
       };

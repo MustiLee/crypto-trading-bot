@@ -1,7 +1,9 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { User, UserSession, StrategyConfig, BacktestResult } from '../types';
 
+// For development - always use localhost:8000
 const API_BASE_URL = 'http://localhost:8000';
+
 const STORAGE_KEYS = {
   SESSION_TOKEN: 'session_token',
   USER_DATA: 'user_data',
@@ -160,8 +162,9 @@ class ApiService {
 
   // WebSocket connection
   createWebSocketConnection(): WebSocket {
-    const protocol = API_BASE_URL.startsWith('https') ? 'wss' : 'ws';
-    const wsUrl = `${protocol}${API_BASE_URL.substring(API_BASE_URL.indexOf('://'))}/ws`;
+    // For React Native web, use localhost:8000 directly
+    const wsUrl = 'ws://localhost:8000/ws';
+    console.log('Connecting to WebSocket:', wsUrl);
     return new WebSocket(wsUrl);
   }
 }
