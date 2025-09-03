@@ -24,11 +24,15 @@ except ImportError as e:
     API_AVAILABLE = False
     logger.warning(f"Mobile API routes not available: {e}")
 
-# Try to import auth router, but don't fail if dependencies missing
-# Temporarily disabled for testing
-auth_router = None
-AUTH_AVAILABLE = False
-logger.warning("Authentication routes disabled for testing")
+# Try to import auth router
+try:
+    from ..api.auth import router as auth_router
+    AUTH_AVAILABLE = True
+    logger.info("Authentication routes loaded successfully")
+except ImportError as e:
+    auth_router = None
+    AUTH_AVAILABLE = False
+    logger.warning(f"Authentication routes not available: {e}")
 
 
 class MultiSymbolWebSocketManager:

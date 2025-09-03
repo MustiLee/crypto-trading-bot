@@ -152,34 +152,12 @@ class MultiSymbolBinanceStream:
             else:
                 logger.debug(f"📈 Live price {symbol_key}: ${kline['close']}")
             
-            # Force signal generation every 10th live update for testing
-            # This helps generate signals even without closed candles
-            if not hasattr(self, '_update_counter'):
-                self._update_counter = {}
-            if symbol_key not in self._update_counter:
-                self._update_counter[symbol_key] = 0
-                
-            self._update_counter[symbol_key] += 1
-            
-            # Every 10th update, force a "pseudo-closed" candle for signal generation
-            if self._update_counter[symbol_key] % 10 == 0:
-                logger.info(f"🔧 Forcing signal generation for {symbol_key} (pseudo-closed candle)")
-                kline_copy = kline.copy()
-                kline_copy['is_closed'] = True  # Force signal generation
-                
-                # Notify callbacks with pseudo-closed candle
-                for callback in self.callbacks[symbol_key]:
-                    try:
-                        await callback(symbol_key, kline_copy)
-                    except Exception as e:
-                        logger.error(f"Error in forced callback for {symbol_key}: {e}")
-            else:
-                # Normal callback processing
-                for callback in self.callbacks[symbol_key]:
-                    try:
-                        await callback(symbol_key, kline)
-                    except Exception as e:
-                        logger.error(f"Error in callback for {symbol_key}: {e}")
+            # Always notify callbacks - let signal processor decide what to do with live vs closed candles
+            for callback in self.callbacks[symbol_key]:
+                try:
+                    await callback(symbol_key, kline)
+                except Exception as e:
+                    logger.error(f"Error in callback for {symbol_key}: {e}")
                     
         except Exception as e:
             logger.error(f"Error handling kline data: {e}")

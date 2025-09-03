@@ -94,6 +94,24 @@ CREATE TABLE IF NOT EXISTS user_sessions (
 -- Create index on session_token for faster lookups
 CREATE INDEX IF NOT EXISTS idx_user_sessions_token ON user_sessions(session_token);
 
+-- Create email_verifications table for temporary storage of verification codes
+CREATE TABLE IF NOT EXISTS email_verifications (
+    email VARCHAR(254) PRIMARY KEY,
+    verification_code VARCHAR(10) NOT NULL,
+    expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Create temp_registrations table for temporary user data during registration
+CREATE TABLE IF NOT EXISTS temp_registrations (
+    email VARCHAR(254) PRIMARY KEY,
+    password_hash VARCHAR(255) NOT NULL,
+    first_name VARCHAR(50) NOT NULL,
+    last_name VARCHAR(50) NOT NULL,
+    phone VARCHAR(20) NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Create custom_strategies table
 CREATE TABLE IF NOT EXISTS custom_strategies (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

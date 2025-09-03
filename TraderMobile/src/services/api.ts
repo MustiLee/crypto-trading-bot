@@ -99,26 +99,75 @@ class ApiService {
   }): Promise<{ success: boolean; message: string }> {
     console.log('Register attempt:', userData.email);
     
-    // Mock register for demo - simulate successful registration
-    // In production, this would call the API
-    
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Check if email already exists (simple validation)
-    if (userData.email === 'test@example.com') {
-      return { 
-        success: false, 
-        message: 'Bu email adresi zaten kullanılıyor.' 
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: userData.email,
+          password: userData.password,
+          first_name: userData.first_name,
+          last_name: userData.last_name,
+          phone: userData.phone || ''
+        }),
+      });
+
+      const result = await this.handleResponse(response);
+      return result;
+    } catch (error) {
+      console.error('Registration error:', error);
+      return {
+        success: false,
+        message: error instanceof Error ? error.message : 'Kayıt sırasında bir hata oluştu.'
       };
     }
-    
-    // Simulate successful registration
-    console.log('Mock registration successful for:', userData.email);
-    return { 
-      success: true, 
-      message: 'Kayıt başarılı! Şimdi giriş yapabilirsiniz.' 
-    };
+  }
+
+  async verifyEmail(email: string, verificationCode: string): Promise<{ success: boolean; message: string }> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/verify-email`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          verification_code: verificationCode
+        }),
+      });
+
+      const result = await this.handleResponse(response);
+      return result;
+    } catch (error) {
+      console.error('Email verification error:', error);
+      return {
+        success: false,
+        message: error instanceof Error ? error.message : 'Doğrulama sırasında bir hata oluştu.'
+      };
+    }
+  }
+
+  async resendVerificationCode(email: string): Promise<{ success: boolean; message: string }> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/resend-verification`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      const result = await this.handleResponse(response);
+      return result;
+    } catch (error) {
+      console.error('Resend verification error:', error);
+      return {
+        success: false,
+        message: error instanceof Error ? error.message : 'Kod gönderilirken bir hata oluştu.'
+      };
+    }
   }
 
   async logout(): Promise<void> {

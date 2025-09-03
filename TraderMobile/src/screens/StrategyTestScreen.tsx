@@ -71,17 +71,26 @@ const StrategyTestScreen: React.FC = () => {
 
     setIsLoading(true);
     try {
-      // For demo purposes - simulate backtest results
+      // Deterministic backtest results based on symbol and parameters
       // In production, this would call the API
+      const seed = symbol.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+      const paramSeed = Object.values(parameters).reduce((acc, val) => acc + parseFloat(val) * 100, seed);
+      
+      // Simple seeded random function for consistent results
+      const seededRandom = (seed: number, index: number) => {
+        const x = Math.sin(seed * 12.9898 + index * 78.233) * 43758.5453;
+        return x - Math.floor(x);
+      };
+      
       const mockResult: BacktestResult = {
-        total_return: Math.random() * 0.4 - 0.1, // -10% to +30%
-        sharpe_ratio: Math.random() * 2 + 0.5, // 0.5 to 2.5
-        max_drawdown: Math.random() * 0.3, // 0% to 30%
-        win_rate: Math.random() * 0.4 + 0.5, // 50% to 90%
-        total_trades: Math.floor(Math.random() * 100) + 20, // 20 to 120
+        total_return: seededRandom(paramSeed, 1) * 0.4 - 0.1, // -10% to +30%
+        sharpe_ratio: seededRandom(paramSeed, 2) * 2 + 0.5, // 0.5 to 2.5
+        max_drawdown: seededRandom(paramSeed, 3) * 0.3, // 0% to 30%
+        win_rate: seededRandom(paramSeed, 4) * 0.4 + 0.5, // 50% to 90%
+        total_trades: Math.floor(seededRandom(paramSeed, 5) * 100) + 20, // 20 to 120
         start_date: '2024-01-01',
         end_date: '2024-12-31',
-        final_portfolio_value: 10000 + Math.random() * 5000,
+        final_portfolio_value: 10000 + seededRandom(paramSeed, 6) * 5000,
         equity_curve: []
       };
 
