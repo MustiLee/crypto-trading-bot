@@ -14,6 +14,7 @@ import { RouteProp, useRoute, useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList, BacktestResult, StrategyConfig } from '../types';
 import { apiService } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 type StrategyTestRouteProp = RouteProp<RootStackParamList, 'StrategyTest'>;
 type StrategyTestNavigationProp = StackNavigationProp<RootStackParamList, 'StrategyTest'>;
@@ -97,11 +98,10 @@ const StrategyTestScreen: React.FC = () => {
     }
   };
 
+  const { user } = useAuth();
+
   const handleSaveStrategy = async () => {
     if (!backtestResult) return;
-
-    // Check if user is authenticated
-    const { user, requireAuth } = useAuth();
     
     if (!user) {
       Alert.alert(

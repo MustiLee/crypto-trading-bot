@@ -36,10 +36,14 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
     setIsLoading(true);
     try {
       const success = await login(email.trim(), password);
-      if (!success) {
+      if (success) {
+        console.log('Login successful, navigating back');
+        navigation.goBack(); // Go back to previous screen
+      } else {
         Alert.alert('Hata', 'Email veya şifre hatalı.');
       }
     } catch (error) {
+      console.error('Login error:', error);
       Alert.alert('Hata', 'Giriş yaparken bir hata oluştu.');
     } finally {
       setIsLoading(false);

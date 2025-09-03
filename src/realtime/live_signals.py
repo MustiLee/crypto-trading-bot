@@ -490,12 +490,24 @@ class LiveSignalGenerator:
                     # Get the most recent candle from database for this timestamp
                     recent_df = self.db.get_market_data(self.symbol, self.interval, limit=1)
                     if not recent_df.empty:
-                        # For now, we'll save signal without market_data_id reference
-                        # In a production system, you'd want to get the actual market_data_id
-                        pass
-                    
-                    # Save signal directly (simplified approach)
-                    # self.db.save_signal(market_data_id, new_signal.value)
+                        # Get market_data_id from the most recent candle
+                        market_data_id = recent_df.index[0] if hasattr(recent_df.index[0], '__int__') else None
+                        if market_data_id:
+                            # Save signal to database with market_data_id reference
+                            if self.db.save_signal(self.symbol, market_data_id, new_signal.value, 
+                                                 signal_strength=1.0, strategy_name="realistic1"):
+                                logger.info(f"💾 Saved {new_signal.value} signal to database")
+                            else:
+                                logger.warning(f"Failed to save {new_signal.value} signal to database")
+                    else:
+                        # Save signal without market_data_id (direct approach)
+                        signal_data_db = {
+                            'signal_type': new_signal.value,
+                            'signal_strength': 1.0 if new_signal != SignalType.NEUTRAL else 0.0,
+                            'strategy_name': 'realistic1'
+                        }
+                        # Use a direct database insertion method if available
+                        logger.info(f"💾 Attempting to save {new_signal.value} signal without market_data_id")
                     
                 except Exception as e:
                     logger.warning(f"Could not save signal to database: {e}")

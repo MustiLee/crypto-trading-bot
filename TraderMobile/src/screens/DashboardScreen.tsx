@@ -36,7 +36,38 @@ interface CryptoCard {
 
 const DashboardScreen: React.FC = () => {
   const navigation = useNavigation<DashboardNavigationProp>();
-  const [cryptoData, setCryptoData] = useState<{ [key: string]: CryptoCard }>({});
+  const symbolConfig: { [key: string]: any } = {
+    BTC: { symbol: 'BTCUSDT', display_name: 'Bitcoin', precision: 2, strategy_type: 'quality_over_quantity' },
+    ETH: { symbol: 'ETHUSDT', display_name: 'Ethereum', precision: 2, strategy_type: 'trend_momentum' },
+    XRP: { symbol: 'XRPUSDT', display_name: 'Ripple', precision: 4, strategy_type: 'volatility_breakout' },
+    BNB: { symbol: 'BNBUSDT', display_name: 'Binance Coin', precision: 2, strategy_type: 'quality_over_quantity' },
+    ADA: { symbol: 'ADAUSDT', display_name: 'Cardano', precision: 4, strategy_type: 'trend_momentum' },
+    SOL: { symbol: 'SOLUSDT', display_name: 'Solana', precision: 2, strategy_type: 'volatility_breakout' },
+    DOT: { symbol: 'DOTUSDT', display_name: 'Polkadot', precision: 3, strategy_type: 'signal_rich' },
+    POL: { symbol: 'POLUSDT', display_name: 'Polygon', precision: 4, strategy_type: 'trend_following' },
+    AVAX: { symbol: 'AVAXUSDT', display_name: 'Avalanche', precision: 3, strategy_type: 'mean_reversion' },
+    LINK: { symbol: 'LINKUSDT', display_name: 'Chainlink', precision: 3, strategy_type: 'signal_rich' },
+  };
+
+  const buildInitialData = (): { [key: string]: CryptoCard } => {
+    const initial: { [key: string]: CryptoCard } = {};
+    symbols.forEach((symbol) => {
+      const config = symbolConfig[symbol];
+      initial[symbol] = {
+        symbol,
+        display_name: config?.display_name || symbol,
+        price: 0,
+        signal: 'NEUTRAL',
+        indicators: { RSI: 0, MACD: 0, BB_UPPER: 0, BB_LOWER: 0 },
+        timestamp: new Date().toISOString(),
+        strategy_type: config?.strategy_type || 'quality_over_quantity',
+      };
+    });
+    return initial;
+  };
+
+  const [cryptoData, setCryptoData] = useState<{ [key: string]: CryptoCard }>(() => buildInitialData());
+  const [symbolErrors, setSymbolErrors] = useState<{ [key: string]: string | null }>({});
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<'connected' | 'disconnected'>('disconnected');
   const wsRef = useRef<WebSocket | null>(null);
@@ -45,7 +76,6 @@ const DashboardScreen: React.FC = () => {
   const symbols = ['BTC', 'ETH', 'XRP', 'BNB', 'ADA', 'SOL', 'DOT', 'POL', 'AVAX', 'LINK'];
 
   useEffect(() => {
-    initializeData();
     connectWebSocket();
 
     return () => {
@@ -55,36 +85,7 @@ const DashboardScreen: React.FC = () => {
     };
   }, []);
 
-  const initializeData = async () => {
-    // Initialize with default data
-    const initialData: { [key: string]: CryptoCard } = {};
-    symbols.forEach(symbol => {
-      const symbolConfig: { [key: string]: any } = {
-        BTC: { symbol: 'BTCUSDT', display_name: 'Bitcoin', precision: 2, strategy_type: 'quality_over_quantity' },
-        ETH: { symbol: 'ETHUSDT', display_name: 'Ethereum', precision: 2, strategy_type: 'trend_momentum' },
-        XRP: { symbol: 'XRPUSDT', display_name: 'Ripple', precision: 4, strategy_type: 'volatility_breakout' },
-        BNB: { symbol: 'BNBUSDT', display_name: 'Binance Coin', precision: 2, strategy_type: 'quality_over_quantity' },
-        ADA: { symbol: 'ADAUSDT', display_name: 'Cardano', precision: 4, strategy_type: 'trend_momentum' },
-        SOL: { symbol: 'SOLUSDT', display_name: 'Solana', precision: 2, strategy_type: 'volatility_breakout' },
-        DOT: { symbol: 'DOTUSDT', display_name: 'Polkadot', precision: 3, strategy_type: 'signal_rich' },
-        POL: { symbol: 'POLUSDT', display_name: 'Polygon', precision: 4, strategy_type: 'trend_following' },
-        AVAX: { symbol: 'AVAXUSDT', display_name: 'Avalanche', precision: 3, strategy_type: 'mean_reversion' },
-        LINK: { symbol: 'LINKUSDT', display_name: 'Chainlink', precision: 3, strategy_type: 'signal_rich' },
-      };
-
-      const config = symbolConfig[symbol];
-      initialData[symbol] = {
-        symbol,
-        display_name: config.display_name,
-        price: 0,
-        signal: 'NEUTRAL',
-        indicators: { RSI: 0, MACD: 0, BB_UPPER: 0, BB_LOWER: 0 },
-        timestamp: new Date().toISOString(),
-        strategy_type: config.strategy_type,
-      };
-    });
-    setCryptoData(initialData);
-  };
+  // no initializeData needed; initial state covers it
 
   const connectWebSocket = () => {
     try {
@@ -94,6 +95,8 @@ const DashboardScreen: React.FC = () => {
       ws.onopen = () => {
         console.log('WebSocket connected successfully');
         setConnectionStatus('connected');
+        // clear any connection-related errors
+        setSymbolErrors({});
       };
 
       ws.onmessage = (event) => {
@@ -109,6 +112,10 @@ const DashboardScreen: React.FC = () => {
       ws.onclose = () => {
         console.log('WebSocket disconnected');
         setConnectionStatus('disconnected');
+        // mark all as stale
+        const errs: { [k: string]: string } = {};
+        symbols.forEach((s) => (errs[s] = 'Veri güncellenemedi'));
+        setSymbolErrors(errs);
         // Attempt to reconnect after 5 seconds
         setTimeout(() => {
           console.log('Attempting to reconnect WebSocket...');
@@ -119,6 +126,9 @@ const DashboardScreen: React.FC = () => {
       ws.onerror = (error) => {
         console.error('WebSocket error:', error);
         setConnectionStatus('disconnected');
+        const errs: { [k: string]: string } = {};
+        symbols.forEach((s) => (errs[s] = 'Veri güncellenemedi'));
+        setSymbolErrors(errs);
       };
     } catch (error) {
       console.error('Error connecting WebSocket:', error);
@@ -135,13 +145,16 @@ const DashboardScreen: React.FC = () => {
           ...message.data,
         },
       }));
+      // clear error for this symbol if any
+      setSymbolErrors(prev => ({ ...prev, [message.symbol!]: null }));
     }
   };
 
   const onRefresh = async () => {
     setIsRefreshing(true);
     try {
-      await initializeData();
+      // reset to initial, keep UI responsive
+      setCryptoData(buildInitialData());
       if (wsRef.current?.readyState !== WebSocket.OPEN) {
         connectWebSocket();
       }
@@ -174,13 +187,29 @@ const DashboardScreen: React.FC = () => {
     }
   };
 
-  const renderCryptoCard = (symbol: string, data: CryptoCard) => (
-    <View key={symbol} style={styles.cryptoCard}>
-      <View style={styles.cardHeader}>
-        <View>
-          <Text style={styles.cryptoName}>{data.display_name} ({symbol})</Text>
-          <Text style={styles.price}>{formatPrice(data.price)}</Text>
+  const renderCryptoCard = (symbol: string, data: CryptoCard) => {
+    if (!data) {
+      // show a placeholder card instead of logging errors
+      return (
+        <View key={symbol} style={styles.cryptoCard}>
+          <View style={styles.cardHeader}>
+            <Text style={styles.cryptoName}>{symbol}</Text>
+            <Text style={styles.price}>Yükleniyor...</Text>
+          </View>
+          {symbolErrors[symbol] && (
+            <Text style={styles.errorText}>{symbolErrors[symbol]}</Text>
+          )}
         </View>
+      );
+    }
+
+    return (
+      <View key={symbol} style={styles.cryptoCard}>
+        <View style={styles.cardHeader}>
+          <View>
+            <Text style={styles.cryptoName}>{data.display_name || symbol} ({symbol})</Text>
+            <Text style={styles.price}>{formatPrice(data.price || 0)}</Text>
+          </View>
         <View style={[styles.signalBadge, { backgroundColor: getSignalColor(data.signal) }]}>
           <Text style={styles.signalText}>{data.signal}</Text>
         </View>
@@ -215,8 +244,12 @@ const DashboardScreen: React.FC = () => {
       <Text style={styles.lastUpdate}>
         Son güncelleme: {new Date(data.timestamp).toLocaleTimeString('tr-TR')}
       </Text>
+      {symbolErrors[symbol] && (
+        <Text style={styles.errorText}>{symbolErrors[symbol]}</Text>
+      )}
     </View>
   );
+};
 
   return (
     <LinearGradient
@@ -407,6 +440,13 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#64748b',
     textAlign: 'center',
+  },
+  errorText: {
+    marginTop: 8,
+    textAlign: 'center',
+    color: '#ef4444',
+    fontSize: 12,
+    fontWeight: '600',
   },
 });
 

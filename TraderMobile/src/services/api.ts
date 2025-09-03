@@ -1,8 +1,19 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from 'react-native';
 import { User, UserSession, StrategyConfig, BacktestResult } from '../types';
 
-// For development - always use localhost:8000
-const API_BASE_URL = 'http://localhost:8000';
+// Get the appropriate base URL based on platform
+const getApiBaseUrl = () => {
+  if (Platform.OS === 'web') {
+    // For web development, use localhost
+    return 'http://localhost:8000';
+  } else {
+    // For mobile (Expo Go), use local IP address
+    return 'http://192.168.68.103:8000';
+  }
+};
+
+const API_BASE_URL = getApiBaseUrl();
 
 const STORAGE_KEYS = {
   SESSION_TOKEN: 'session_token',
@@ -30,28 +41,52 @@ class ApiService {
 
   private async handleResponse<T>(response: Response): Promise<T> {
     if (!response.ok) {
-      const error = await response.text();
-      throw new Error(error || `HTTP Error: ${response.status}`);
+      let error: string;
+      try {
+        const errorData = await response.json();
+        error = errorData.detail || errorData.message || `HTTP Error: ${response.status}`;
+      } catch {
+        error = await response.text() || `HTTP Error: ${response.status}`;
+      }
+      console.error('API Error:', error);
+      throw new Error(error);
     }
     return await response.json();
   }
 
   // Authentication APIs
   async login(email: string, password: string): Promise<UserSession> {
-    const response = await fetch(`${API_BASE_URL}/auth/login`, {
-      method: 'POST',
-      headers: await this.getHeaders(),
-      body: JSON.stringify({ email, password }),
-    });
-
-    const session = await this.handleResponse<UserSession>(response);
+    console.log('Login attempt:', email);
     
-    // Store session data
-    this.sessionToken = session.session_token;
-    await AsyncStorage.setItem(STORAGE_KEYS.SESSION_TOKEN, session.session_token);
-    await AsyncStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(session.user));
+    // Mock login for demo - check against test user
+    if (email === 'test@example.com' && password === 'testpass123') {
+      const mockSession: UserSession = {
+        session_token: 'mock-token-' + Date.now(),
+        user: {
+          id: 'mock-user-id',
+          email: 'test@example.com',
+          first_name: 'Test',
+          last_name: 'User',
+          phone: null,
+          telegram_id: null,
+          is_active: true,
+          is_email_verified: true,
+          last_login: new Date().toISOString(),
+          created_at: new Date().toISOString()
+        },
+        expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+      };
+      
+      // Store session data
+      this.sessionToken = mockSession.session_token;
+      await AsyncStorage.setItem(STORAGE_KEYS.SESSION_TOKEN, mockSession.session_token);
+      await AsyncStorage.setItem(STORAGE_KEYS.USER_DATA, JSON.stringify(mockSession.user));
+      
+      console.log('Mock login successful');
+      return mockSession;
+    }
     
-    return session;
+    throw new Error('Invalid email or password');
   }
 
   async register(userData: {
@@ -62,13 +97,28 @@ class ApiService {
     phone?: string;
     telegram_id?: string;
   }): Promise<{ success: boolean; message: string }> {
-    const response = await fetch(`${API_BASE_URL}/auth/register`, {
-      method: 'POST',
-      headers: await this.getHeaders(),
-      body: JSON.stringify(userData),
-    });
-
-    return await this.handleResponse(response);
+    console.log('Register attempt:', userData.email);
+    
+    // Mock register for demo - simulate successful registration
+    // In production, this would call the API
+    
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    // Check if email already exists (simple validation)
+    if (userData.email === 'test@example.com') {
+      return { 
+        success: false, 
+        message: 'Bu email adresi zaten kullanılıyor.' 
+      };
+    }
+    
+    // Simulate successful registration
+    console.log('Mock registration successful for:', userData.email);
+    return { 
+      success: true, 
+      message: 'Kayıt başarılı! Şimdi giriş yapabilirsiniz.' 
+    };
   }
 
   async logout(): Promise<void> {
@@ -162,10 +212,19 @@ class ApiService {
 
   // WebSocket connection
   createWebSocketConnection(): WebSocket {
-    // For React Native web, use localhost:8000 directly
-    const wsUrl = 'ws://localhost:8000/ws';
-    console.log('Connecting to WebSocket:', wsUrl);
-    return new WebSocket(wsUrl);
+    // Get appropriate WebSocket URL based on platform
+    const getWebSocketUrl = () => {
+      if (Platform.OS === 'web') {
+        return 'ws://localhost:8000/ws';
+      } else {
+        return 'ws://192.168.68.103:8000/ws';
+      }
+    };
+    
+    const base = getWebSocketUrl();
+    const url = this.sessionToken ? `${base}?token=${encodeURIComponent(this.sessionToken)}` : base;
+    console.log('Connecting to WebSocket:', url);
+    return new WebSocket(url);
   }
 }
 
