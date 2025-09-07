@@ -396,3 +396,61 @@ class UserManager:
         except Exception as e:
             self.db_session.rollback()
             logger.error(f"Error cleaning up expired sessions: {e}")
+    
+    def get_user_preferences(self, user_id: uuid.UUID) -> dict:
+        """
+        Get user preferences from the database
+        
+        Args:
+            user_id: User ID
+            
+        Returns:
+            Dictionary of user preferences or None if not found
+        """
+        try:
+            user = self.db_session.query(User).filter(User.id == user_id).first()
+            
+            if not user or not user.preferences:
+                return {}
+            
+            # Parse JSON preferences if they exist
+            import json
+            try:
+                return json.loads(user.preferences)
+            except (json.JSONDecodeError, TypeError):
+                return {}
+                
+        except Exception as e:
+            logger.error(f"Error getting user preferences: {e}")
+            return {}
+    
+    def save_user_preferences(self, user_id: uuid.UUID, preferences: dict) -> bool:
+        """
+        Save user preferences to the database
+        
+        Args:
+            user_id: User ID
+            preferences: Dictionary of preferences to save
+            
+        Returns:
+            True if successful
+        """
+        try:
+            user = self.db_session.query(User).filter(User.id == user_id).first()
+            
+            if not user:
+                logger.error(f"User not found: {user_id}")
+                return False
+            
+            # Convert preferences to JSON string
+            import json
+            user.preferences = json.dumps(preferences)
+            
+            self.db_session.commit()
+            logger.info(f"User preferences saved for user {user_id}")
+            return True
+            
+        except Exception as e:
+            self.db_session.rollback()
+            logger.error(f"Error saving user preferences: {e}")
+            return False

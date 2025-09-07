@@ -8,12 +8,13 @@ import asyncio
 import sys
 from pathlib import Path
 
-# Add src to path
-sys.path.append(str(Path(__file__).parent.parent / "src"))
+# Add project root to path so `import src` works
+sys.path.append(str(Path(__file__).resolve().parent.parent))
 
 from src.realtime.multi_symbol_dashboard import MultiSymbolTradingDashboard
 from src.utils.logging import setup_logging
 from loguru import logger
+import os
 
 
 async def main():
@@ -30,13 +31,14 @@ async def main():
     logger.info("=" * 60)
     
     # Create and start multi-symbol dashboard
+    port = int(os.getenv("PORT", "8080"))
     dashboard = MultiSymbolTradingDashboard(
         interval="5m", 
-        port=8000
+        port=port
     )
     
     try:
-        logger.info("🌐 Multi-Symbol Dashboard will be available at: http://localhost:8000")
+        logger.info(f"🌐 Multi-Symbol Dashboard will be available at: http://localhost:{port}")
         logger.info("💰 Tracking: BTC, ETH, XRP with live signals")
         logger.info("Press Ctrl+C to stop...")
         

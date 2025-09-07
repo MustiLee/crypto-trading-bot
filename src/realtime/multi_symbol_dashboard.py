@@ -10,10 +10,13 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
+import os
+from pathlib import Path
 from loguru import logger
 
 from .multi_symbol_stream import MultiSymbolBinanceStream
 from .live_signals import LiveSignalGenerator, SignalType
+from ..database.db_manager import TradingDBManager
 
 # Import mobile API router
 try:
@@ -94,12 +97,29 @@ class MultiSymbolTradingDashboard:
         self.port = port
         self.interval = interval
         
-        # Load symbols configuration
-        config_path = Path(__file__).parent.parent.parent / "config" / "symbols.yaml"
-        with open(config_path, 'r') as f:
-            self.config = yaml.safe_load(f)
-        
-        self.symbols = self.config['symbols']
+        # Load symbols configuration: prefer DB, fallback to YAML and seed DB
+        self.db = TradingDBManager()
+        try:
+            self.db.ensure_symbols_table()
+        except Exception as e:
+            logger.warning(f"Could not ensure symbol_configs table: {e}")
+
+        db_symbols = self.db.get_symbol_configs()
+
+        if db_symbols:
+            self.symbols = db_symbols
+            logger.info(f"Loaded {len(self.symbols)} symbols from database")
+        else:
+            config_path = Path(__file__).parent.parent.parent / "config" / "symbols.yaml"
+            with open(config_path, 'r') as f:
+                self.config = yaml.safe_load(f)
+            self.symbols = self.config['symbols']
+            # Seed DB for future runs
+            try:
+                if self.db.upsert_symbol_configs(self.symbols):
+                    logger.info("Seeded symbol_configs table from YAML")
+            except Exception as e:
+                logger.warning(f"Failed seeding symbol_configs from YAML: {e}")
         
         # WebSocket manager
         self.ws_manager = MultiSymbolWebSocketManager()
@@ -160,6 +180,37 @@ class MultiSymbolTradingDashboard:
         async def websocket_endpoint(websocket: WebSocket):
             await self.ws_manager.connect(websocket)
             try:
+                # Send initial snapshot for all symbols to newly connected clients
+                try:
+                    for symbol_key, signal_generator in self.signal_generators.items():
+                        try:
+                            market = signal_generator.get_current_market_data()
+                            current_signal = getattr(signal_generator, 'current_signal', SignalType.NEUTRAL)
+                            
+                            if market:
+                                inds = market.get('indicators', {}) if isinstance(market, dict) else {}
+                                update_data = {
+                                    'type': 'symbol_update',
+                                    'symbol': symbol_key,
+                                    'data': {
+                                        'price': market.get('price'),
+                                        'timestamp': market.get('timestamp', datetime.utcnow().isoformat()),
+                                        'signal': current_signal.value if hasattr(current_signal, 'value') else str(current_signal),
+                                        'indicators': {
+                                            'RSI': inds.get('RSI') or inds.get('rsi'),
+                                            'MACD': inds.get('MACD') or inds.get('macd'),
+                                            'BB_UPPER': inds.get('BBU') or inds.get('bb_upper'),
+                                            'BB_LOWER': inds.get('BBL') or inds.get('bb_lower')
+                                        },
+                                        'is_closed': True
+                                    }
+                                }
+                                await websocket.send_text(json.dumps(update_data))
+                        except Exception as e:
+                            logger.warning(f"Failed to send initial snapshot for {symbol_key}: {e}")
+                except Exception as e:
+                    logger.warning(f"Initial snapshot send error: {e}")
+
                 while True:
                     # Keep connection alive
                     await websocket.receive_text()
@@ -558,11 +609,19 @@ class MultiSymbolTradingDashboard:
         stream_task = asyncio.create_task(self.stream.connect())
         
         # Start the web server
+        reload = os.getenv("UVICORN_RELOAD", "false").lower() == "true"
+        reload_dirs = [
+            str(Path(__file__).resolve().parents[2] / "src"),
+            str(Path(__file__).resolve().parents[2] / "templates"),
+        ] if reload else None
+
         config = uvicorn.Config(
             app=self.app,
             host="0.0.0.0",
             port=self.port,
-            log_level="info"
+            log_level="info",
+            reload=reload,
+            reload_dirs=reload_dirs,
         )
         server = uvicorn.Server(config)
         

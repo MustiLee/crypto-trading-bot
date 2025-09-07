@@ -10,6 +10,8 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
+import os
+from pathlib import Path
 from loguru import logger
 
 from .live_signals import LiveSignalGenerator, SignalType
@@ -984,10 +986,29 @@ class TradingDashboardServer:
             
             # Initialize signal generator in background
             asyncio.create_task(self.signal_generator.initialize())
+
+            # Start Binance WebSocket stream for single-symbol mode
+            try:
+                logger.info("Connecting Binance WebSocket stream for live updates...")
+                asyncio.create_task(self.signal_generator.stream.connect())
+            except Exception as e:
+                logger.error(f"Failed to start Binance stream: {e}")
             
             # Start web server
             logger.info(f"Starting web server on http://localhost:{self.port}")
-            config = uvicorn.Config(self.app, host="0.0.0.0", port=self.port, log_level="info")
+            reload = os.getenv("UVICORN_RELOAD", "false").lower() == "true"
+            reload_dirs = [
+                str(Path(__file__).resolve().parents[2] / "src"),
+                str(Path(__file__).resolve().parents[2] / "templates"),
+            ] if reload else None
+            config = uvicorn.Config(
+                self.app,
+                host="0.0.0.0",
+                port=self.port,
+                log_level="info",
+                reload=reload,
+                reload_dirs=reload_dirs,
+            )
             server = uvicorn.Server(config)
             
             await server.serve()

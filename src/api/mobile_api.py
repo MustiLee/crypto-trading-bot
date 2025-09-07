@@ -40,6 +40,9 @@ class StrategyRequest(BaseModel):
 class TestStrategyRequest(BaseModel):
     symbol: str
 
+class LayoutPreferencesRequest(BaseModel):
+    asset_order: List[str]
+
 class UserResponse(BaseModel):
     id: str
     email: str
@@ -354,4 +357,60 @@ async def get_symbol_data():
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to retrieve symbol data"
+        )
+
+# User preferences endpoints
+@mobile_router.get("/user/layout-preferences", response_model=ApiResponse)
+async def get_user_layout_preferences(
+    current_user = Depends(get_current_user),
+    db: Session = Depends(get_db_session)
+):
+    """Get user's layout preferences"""
+    try:
+        user_manager = UserManager(db)
+        preferences = user_manager.get_user_preferences(current_user.id)
+        
+        # If no preferences exist, return empty preferences
+        if not preferences:
+            return ApiResponse(
+                success=True,
+                message="No preferences found",
+                data={"asset_order": []}
+            )
+        
+        return ApiResponse(
+            success=True,
+            message="Preferences retrieved successfully",
+            data={"asset_order": preferences.get("asset_order", [])}
+        )
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to retrieve layout preferences"
+        )
+
+@mobile_router.post("/user/layout-preferences", response_model=ApiResponse)
+async def save_user_layout_preferences(
+    preferences: LayoutPreferencesRequest,
+    current_user = Depends(get_current_user),
+    db: Session = Depends(get_db_session)
+):
+    """Save user's layout preferences"""
+    try:
+        user_manager = UserManager(db)
+        success = user_manager.save_user_preferences(
+            current_user.id, 
+            {"asset_order": preferences.asset_order}
+        )
+        
+        return ApiResponse(
+            success=success,
+            message="Preferences saved successfully" if success else "Failed to save preferences"
+        )
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to save layout preferences"
         )

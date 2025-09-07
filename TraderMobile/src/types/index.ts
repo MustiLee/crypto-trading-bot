@@ -55,29 +55,35 @@ export interface BacktestResult {
   }>;
 }
 
-export interface WebSocketMessage {
-  type: 'symbol_update' | 'connection_status' | 'error';
-  symbol?: string;
-  data?: SymbolData;
-  message?: string;
-}
+// WebSocket message types
+export type WebSocketMessage =
+  | { type: 'symbol_update'; symbol: string; data: SymbolData }
+  | { type: 'initial'; data: any }
+  | { type: 'market'; data: any }
+  | { type: 'price_update'; data: any }
+  | { type: 'signal'; data: any }
+  | { type: 'connection_status' | 'error'; message?: string };
 
 export type RootStackParamList = {
-  AuthStack: undefined;
-  MainTabs: undefined;
+  MainTabs: { screen?: string } | undefined;
+  AuthStack: { screen?: string; params?: any } | undefined;
   StrategyTest: {
     symbol: string;
     displayName: string;
   };
 };
 
-export type AuthStackParamList = {
-  Login: undefined;
-  Register: undefined;
-};
-
 export type MainTabParamList = {
   Dashboard: undefined;
-  Profile: undefined;
+  News: undefined;
   Strategies: undefined;
+  Profile: undefined;
+};
+
+export type AuthStackParamList = {
+  Login: { fromPasswordReset?: boolean; returnTo?: string } | undefined;
+  Register: undefined;
+  ForgotPasswordStart: undefined;
+  ForgotPasswordVerify: { email: string };
+  ResetPassword: { email: string };
 };

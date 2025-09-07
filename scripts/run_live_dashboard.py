@@ -8,8 +8,8 @@ import asyncio
 import sys
 from pathlib import Path
 
-# Add src to path
-sys.path.append(str(Path(__file__).parent / "src"))
+# Add project root to path so `import src` works
+sys.path.append(str(Path(__file__).resolve().parent.parent))
 
 from src.realtime.web_server import TradingDashboardServer
 from src.utils.logging import setup_logging

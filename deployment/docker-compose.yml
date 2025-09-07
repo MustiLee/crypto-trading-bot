@@ -45,6 +45,8 @@ services:
       # Web server configuration
       HOST: 0.0.0.0
       PORT: 8000
+      # Enable auto-reload in development (set to 'false' in production)
+      UVICORN_RELOAD: "true"
       
       # Python configuration
       PYTHONPATH: /app
@@ -56,6 +58,10 @@ services:
       - ../data:/app/data
       - ../reports:/app/reports
       - ../config:/app/config:ro
+      # Bind-mount source for hot-reload in development
+      - ../src:/app/src
+      - ../templates:/app/templates
+      - ../scripts:/app/scripts
     depends_on:
       postgres:
         condition: service_healthy

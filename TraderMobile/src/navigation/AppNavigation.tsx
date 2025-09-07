@@ -5,21 +5,66 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Text, View, TouchableOpacity, StyleSheet } from 'react-native';
 
 import { useAuth } from '../context/AuthContext';
-import { RootStackParamList, AuthStackParamList, MainTabParamList } from '../types';
+import { RootStackParamList, AuthStackParamList } from '../types';
 
 import LoginScreen from '../screens/LoginScreen';
 import RegisterScreen from '../screens/RegisterScreen';
+import ForgotPasswordStart from '../screens/ForgotPasswordStart';
+import ForgotPasswordVerify from '../screens/ForgotPasswordVerify';
+import ResetPasswordScreen from '../screens/ResetPasswordScreen';
 import DashboardScreen from '../screens/DashboardScreen';
+import NewsScreen from '../screens/NewsScreen';
+import StrategiesScreen from '../screens/StrategiesScreen';
 import StrategyTestScreen from '../screens/StrategyTestScreen';
 
 const RootStack = createStackNavigator<RootStackParamList>();
 const AuthStack = createStackNavigator<AuthStackParamList>();
-const MainTabs = createBottomTabNavigator<MainTabParamList>();
+const MainTabs = createBottomTabNavigator();
 
 const AuthNavigator = () => (
-  <AuthStack.Navigator screenOptions={{ headerShown: false }}>
-    <AuthStack.Screen name="Login" component={LoginScreen} />
-    <AuthStack.Screen name="Register" component={RegisterScreen} />
+  <AuthStack.Navigator
+    screenOptions={({ navigation }) => ({
+      headerShown: true,
+      headerStyle: { backgroundColor: 'white' },
+      headerTitleStyle: { fontWeight: '700', color: '#333' },
+      headerBackTitleVisible: false,
+      headerBackTitle: '',
+      headerRight: () => (
+        <TouchableOpacity
+          onPress={() => navigation.getParent()?.goBack()}
+          style={{ paddingHorizontal: 16, paddingVertical: 8 }}
+          accessibilityLabel="Kapat"
+        >
+          <Text style={{ fontSize: 18 }}>✖️</Text>
+        </TouchableOpacity>
+      ),
+    })}
+  >
+    <AuthStack.Screen 
+      name="Login" 
+      component={LoginScreen}
+      options={{ title: 'Giriş' }}
+    />
+    <AuthStack.Screen 
+      name="Register" 
+      component={RegisterScreen}
+      options={{ title: 'Kayıt Ol' }}
+    />
+    <AuthStack.Screen
+      name="ForgotPasswordStart"
+      component={ForgotPasswordStart}
+      options={{ title: 'Şifremi Unuttum' }}
+    />
+    <AuthStack.Screen
+      name="ForgotPasswordVerify"
+      component={ForgotPasswordVerify}
+      options={{ title: 'Doğrulama' }}
+    />
+    <AuthStack.Screen
+      name="ResetPassword"
+      component={ResetPasswordScreen}
+      options={{ title: 'Yeni Şifre' }}
+    />
   </AuthStack.Navigator>
 );
 
@@ -63,64 +108,60 @@ const ProfileScreen = ({ navigation }: any) => {
   );
 };
 
-const StrategiesScreen = () => (
-  <View style={profileStyles.container}>
-    <Text style={profileStyles.title}>📈 Stratejilerim</Text>
-    <Text style={profileStyles.comingSoon}>Yakında...</Text>
-  </View>
-);
-
-const MainTabNavigator = () => (
+const MainTabsNavigator = () => (
   <MainTabs.Navigator
     screenOptions={{
       headerShown: false,
       tabBarStyle: {
-        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+        backgroundColor: '#667eea',
         borderTopWidth: 0,
-        elevation: 10,
+        elevation: 8,
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: -5 },
+        shadowOffset: { width: 0, height: -2 },
         shadowOpacity: 0.1,
-        shadowRadius: 10,
-        height: 60,
+        shadowRadius: 4,
         paddingBottom: 5,
+        height: 60,
       },
-      tabBarActiveTintColor: '#667eea',
-      tabBarInactiveTintColor: '#999',
+      tabBarActiveTintColor: 'white',
+      tabBarInactiveTintColor: 'rgba(255,255,255,0.6)',
       tabBarLabelStyle: {
         fontSize: 12,
         fontWeight: '600',
+        marginBottom: 3,
       },
     }}
   >
-    <MainTabs.Screen 
-      name="Dashboard" 
+    <MainTabs.Screen
+      name="Dashboard"
       component={DashboardScreen}
       options={{
-        tabBarLabel: 'Dashboard',
-        tabBarIcon: ({ focused }) => (
-          <Text style={{ fontSize: 20 }}>{focused ? '📊' : '📈'}</Text>
-        ),
+        tabBarLabel: 'Ana Sayfa',
+        tabBarIcon: ({ color }) => <Text style={{ fontSize: 20, color }}>📊</Text>,
       }}
     />
-    <MainTabs.Screen 
-      name="Strategies" 
+    <MainTabs.Screen
+      name="News"
+      component={NewsScreen}
+      options={{
+        tabBarLabel: 'Haberler',
+        tabBarIcon: ({ color }) => <Text style={{ fontSize: 20, color }}>📰</Text>,
+      }}
+    />
+    <MainTabs.Screen
+      name="Strategies"
       component={StrategiesScreen}
       options={{
         tabBarLabel: 'Stratejiler',
-        tabBarIcon: ({ focused }) => (
-          <Text style={{ fontSize: 20 }}>{focused ? '🎯' : '📋'}</Text>
-        ),
+        tabBarIcon: ({ color }) => <Text style={{ fontSize: 20, color }}>🎯</Text>,
       }}
     />
-    <MainTabs.Screen 
-      name="Profile" 
+    <MainTabs.Screen
+      name="Profile"
       component={ProfileScreen}
       options={{
         tabBarLabel: 'Profil',
-        tabBarIcon: ({ focused }) => (
-          <Text style={{ fontSize: 20 }}>{focused ? '👤' : '👥'}</Text>
-        ),
+        tabBarIcon: ({ color }) => <Text style={{ fontSize: 20, color }}>👤</Text>,
       }}
     />
   </MainTabs.Navigator>
@@ -140,8 +181,12 @@ const AppNavigation = () => {
   return (
     <NavigationContainer>
       <RootStack.Navigator screenOptions={{ headerShown: false }}>
-        <RootStack.Screen name="MainTabs" component={MainTabNavigator} />
-        <RootStack.Screen name="AuthStack" component={AuthNavigator} />
+        <RootStack.Screen name="MainTabs" component={MainTabsNavigator} />
+        <RootStack.Screen 
+          name="AuthStack" 
+          component={AuthNavigator} 
+          options={{ presentation: 'modal' }}
+        />
         <RootStack.Screen 
           name="StrategyTest" 
           component={StrategyTestScreen}

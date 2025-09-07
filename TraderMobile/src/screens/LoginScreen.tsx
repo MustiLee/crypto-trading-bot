@@ -13,15 +13,18 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../context/AuthContext';
 import { StackNavigationProp } from '@react-navigation/stack';
+import { RouteProp, useRoute } from '@react-navigation/native';
 import { AuthStackParamList } from '../types';
 
 type LoginScreenNavigationProp = StackNavigationProp<AuthStackParamList, 'Login'>;
+type LoginScreenRouteProp = RouteProp<AuthStackParamList, 'Login'>;
 
 interface Props {
   navigation: LoginScreenNavigationProp;
 }
 
 const LoginScreen: React.FC<Props> = ({ navigation }) => {
+  const route = useRoute<LoginScreenRouteProp>();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -37,8 +40,19 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
     try {
       const success = await login(email.trim(), password);
       if (success) {
-        // Başarılı girişte önceki sayfaya geri dön
-        if (navigation.canGoBack()) {
+        // Password reset akışından geliyorsa veya navigation stack'te problem varsa MainTabs'a git
+        const fromPasswordReset = route.params?.fromPasswordReset;
+        const returnTo = route.params?.returnTo;
+        const navigationState = navigation.getState();
+        const currentRoute = navigationState.routes[navigationState.index];
+        
+        if (fromPasswordReset || currentRoute?.name === 'ResetPassword') {
+          // AuthStack'i kapat ve MainTabs'a dön
+          navigation.getParent()?.goBack();
+        } else if (returnTo) {
+          // Specific page'e dön
+          navigation.getParent()?.navigate('MainTabs', { screen: returnTo });
+        } else if (navigation.canGoBack()) {
           navigation.goBack();
         } else {
           navigation.navigate('MainTabs' as any);
@@ -54,6 +68,10 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleForgotPassword = () => {
+    navigation.navigate('ForgotPasswordStart');
   };
 
   return (
@@ -103,7 +121,7 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
               disabled={isLoading}
             >
               <Text style={styles.loginButtonText}>
-                {isLoading ? 'Giriş yapılıyor...' : 'Giriş Yap'}
+                {isLoading ? 'Giriş yapılıyor...' : 'Giriş'}
               </Text>
             </TouchableOpacity>
 
@@ -113,6 +131,10 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
                 <Text style={styles.registerLink}>Kayıt olun</Text>
               </TouchableOpacity>
             </View>
+
+            <TouchableOpacity style={styles.forgotContainer} onPress={handleForgotPassword}>
+              <Text style={styles.forgotText}>Şifremi Unuttum?</Text>
+            </TouchableOpacity>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -201,6 +223,16 @@ const styles = StyleSheet.create({
     color: '#667eea',
     fontSize: 14,
     fontWeight: '600',
+  },
+  forgotContainer: {
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  forgotText: {
+    color: '#667eea',
+    fontSize: 14,
+    fontWeight: '600',
+    textDecorationLine: 'underline',
   },
 });
 

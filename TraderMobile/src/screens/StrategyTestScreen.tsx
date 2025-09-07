@@ -8,6 +8,7 @@ import {
   StyleSheet,
   Alert,
   ActivityIndicator,
+  Modal,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { RouteProp, useRoute, useNavigation } from '@react-navigation/native';
@@ -22,10 +23,10 @@ type StrategyTestNavigationProp = StackNavigationProp<RootStackParamList, 'Strat
 const StrategyTestScreen: React.FC = () => {
   const route = useRoute<StrategyTestRouteProp>();
   const navigation = useNavigation<StrategyTestNavigationProp>();
+  const { user } = useAuth();
   const { symbol, displayName } = route.params;
 
-  const [strategyName, setStrategyName] = useState(`${displayName} Strategy`);
-  const [description, setDescription] = useState('');
+  // Strategy parameters - more compact
   const [parameters, setParameters] = useState({
     bb_period: '20',
     bb_std: '2.0',
@@ -35,264 +36,389 @@ const StrategyTestScreen: React.FC = () => {
     rsi_period: '14',
     rsi_overbought: '70',
     rsi_oversold: '30',
-    position_size: '0.1',
-    stop_loss: '0.02',
-    take_profit: '0.04',
   });
+  
+  // Save modal state
+  const [showSaveModal, setShowSaveModal] = useState(false);
+  const [strategyName, setStrategyName] = useState('');
+  const [description, setDescription] = useState('');
   
   const [isLoading, setIsLoading] = useState(false);
   const [backtestResult, setBacktestResult] = useState<BacktestResult | null>(null);
+  const [currentPrice, setCurrentPrice] = useState<number>(0);
+  const [priceChange24h, setPriceChange24h] = useState<number>(0);
 
-  const handleParameterChange = (key: string, value: string) => {
+  // Mock price data
+  const mockPrices: { [key: string]: { price: number; change: number } } = {
+    'BTCUSDT': { price: 110250.00, change: 2.34 },
+    'ETHUSDT': { price: 2847.50, change: 1.89 },
+    'XRPUSDT': { price: 0.6234, change: -1.23 },
+    'BNBUSDT': { price: 645.80, change: 0.87 },
+    'ADAUSDT': { price: 0.4521, change: 3.45 },
+    'SOLUSDT': { price: 178.90, change: -0.56 },
+    'DOTUSDT': { price: 8.45, change: 1.67 },
+    'POLUSDT': { price: 0.8934, change: 2.11 },
+    'AVAXUSDT': { price: 42.15, change: -2.34 },
+    'LINKUSDT': { price: 23.67, change: 1.45 },
+  };
+
+  useEffect(() => {
+    const priceData = mockPrices[symbol] || mockPrices['BTCUSDT'];
+    setCurrentPrice(priceData.price);
+    setPriceChange24h(priceData.change);
+    setStrategyName(`${displayName} Strategy`);
+  }, [symbol, displayName]);
+
+  const updateParameter = (key: string, value: string) => {
     setParameters(prev => ({ ...prev, [key]: value }));
   };
 
-  const validateParameters = (): boolean => {
-    const requiredParams = ['bb_period', 'bb_std', 'macd_fast', 'macd_slow', 'macd_signal', 'rsi_period'];
-    
-    for (const param of requiredParams) {
-      const value = parameters[param as keyof typeof parameters];
-      if (!value || isNaN(Number(value)) || Number(value) <= 0) {
-        Alert.alert('Hata', `${param} geçerli bir sayı olmalıdır.`);
-        return false;
-      }
-    }
-
-    if (Number(parameters.macd_fast) >= Number(parameters.macd_slow)) {
-      Alert.alert('Hata', 'MACD hızlı periyot, yavaş periyottan küçük olmalıdır.');
-      return false;
-    }
-
-    return true;
-  };
-
-  const handleTestStrategy = async () => {
-    if (!validateParameters()) return;
-
+  const runBacktest = async () => {
     setIsLoading(true);
     try {
-      // Deterministic backtest results based on symbol and parameters
-      // In production, this would call the API
-      const seed = symbol.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-      const paramSeed = Object.values(parameters).reduce((acc, val) => acc + parseFloat(val) * 100, seed);
-      
-      // Simple seeded random function for consistent results
-      const seededRandom = (seed: number, index: number) => {
-        const x = Math.sin(seed * 12.9898 + index * 78.233) * 43758.5453;
-        return x - Math.floor(x);
-      };
+      await new Promise(resolve => setTimeout(resolve, 1500));
       
       const mockResult: BacktestResult = {
-        total_return: seededRandom(paramSeed, 1) * 0.4 - 0.1, // -10% to +30%
-        sharpe_ratio: seededRandom(paramSeed, 2) * 2 + 0.5, // 0.5 to 2.5
-        max_drawdown: seededRandom(paramSeed, 3) * 0.3, // 0% to 30%
-        win_rate: seededRandom(paramSeed, 4) * 0.4 + 0.5, // 50% to 90%
-        total_trades: Math.floor(seededRandom(paramSeed, 5) * 100) + 20, // 20 to 120
+        total_return: Math.random() * 50 - 10,
+        sharpe_ratio: Math.random() * 2 + 0.5,
+        max_drawdown: -(Math.random() * 15 + 5),
+        win_rate: Math.random() * 40 + 45,
+        total_trades: Math.floor(Math.random() * 200) + 50,
         start_date: '2024-01-01',
         end_date: '2024-12-31',
-        final_portfolio_value: 10000 + seededRandom(paramSeed, 6) * 5000,
+        final_portfolio_value: 10000 + (Math.random() * 5000 - 1000),
         equity_curve: []
       };
-
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 2000));
       
       setBacktestResult(mockResult);
-
     } catch (error) {
-      console.error('Strategy test error:', error);
-      Alert.alert('Hata', 'Strateji testi sırasında bir hata oluştu.');
+      Alert.alert('Hata', 'Backtest çalıştırılırken hata oluştu');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const { user } = useAuth();
-
-  const handleSaveStrategy = async () => {
-    if (!backtestResult) return;
+  const handleSavePress = () => {
+    if (!backtestResult) {
+      Alert.alert('Uyarı', 'Önce stratejiyi test edin');
+      return;
+    }
     
     if (!user) {
       Alert.alert(
-        'Giriş Gerekli',
-        'Strateji kaydetmek için giriş yapmanız gerekiyor.',
+        'Giriş Gerekli', 
+        'Strateji kaydetmek için giriş yapmalısınız.',
         [
           { text: 'İptal', style: 'cancel' },
-          {
-            text: 'Giriş Yap',
-            onPress: () => navigation.navigate('AuthStack'),
-          },
+          { text: 'Giriş Yap', onPress: () => navigation.navigate('AuthStack', { screen: 'Login', params: { returnTo: 'Dashboard' } }) }
         ]
       );
       return;
     }
-
-    Alert.alert(
-      'Strateji Kaydet',
-      'Bu stratejiyi aktif hale getirmek istiyor musunuz?',
-      [
-        { text: 'İptal', style: 'cancel' },
-        {
-          text: 'Kaydet ve Aktifleştir',
-          onPress: async () => {
-            try {
-              // In a real implementation, you'd call the API
-              Alert.alert(
-                'Başarılı',
-                'Strateji kaydedildi ve aktifleştirildi.',
-                [{ text: 'Tamam', onPress: () => navigation.goBack() }]
-              );
-            } catch (error) {
-              Alert.alert('Hata', 'Strateji kaydedilirken bir hata oluştu.');
-            }
-          },
-        },
-      ]
-    );
+    
+    setShowSaveModal(true);
   };
 
-  const renderParameterInput = (key: string, label: string, placeholder: string) => (
-    <View key={key} style={styles.inputContainer}>
-      <Text style={styles.inputLabel}>{label}</Text>
-      <TextInput
-        style={styles.input}
-        value={parameters[key as keyof typeof parameters]}
-        onChangeText={(value) => handleParameterChange(key, value)}
-        placeholder={placeholder}
-        placeholderTextColor="#999"
-        keyboardType="numeric"
-      />
-    </View>
-  );
+  const handleSaveStrategy = async () => {
+    if (!strategyName.trim()) {
+      Alert.alert('Hata', 'Strateji adı gereklidir');
+      return;
+    }
+    
+    try {
+      setIsLoading(true);
+      const strategy: StrategyConfig = {
+        name: strategyName.trim(),
+        description: description.trim() || `${displayName} için otomatik oluşturulan strateji`,
+        parameters: parameters
+      };
+      
+      // Mock save - in real app would call API
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      Alert.alert('Başarılı', 'Strateji kaydedildi', [
+        { text: 'Tamam', onPress: () => {
+          setShowSaveModal(false);
+          navigation.goBack();
+        }}
+      ]);
+    } catch (error) {
+      Alert.alert('Hata', 'Strateji kaydedilemedi');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-  const renderBacktestResult = () => {
-    if (!backtestResult) return null;
+  const getPerformanceGrade = (totalReturn: number): string => {
+    if (totalReturn > 30) return 'A+';
+    if (totalReturn > 20) return 'A';
+    if (totalReturn > 10) return 'B+';
+    if (totalReturn > 5) return 'B';
+    if (totalReturn > 0) return 'C+';
+    if (totalReturn > -5) return 'C';
+    if (totalReturn > -10) return 'D+';
+    return 'F';
+  };
 
-    return (
-      <View style={styles.resultContainer}>
-        <Text style={styles.resultTitle}>📊 Backtest Sonuçları</Text>
-        
-        <View style={styles.resultGrid}>
-          <View style={styles.resultCard}>
-            <Text style={styles.resultLabel}>Toplam Getiri</Text>
-            <Text style={[styles.resultValue, { color: backtestResult.total_return >= 0 ? '#10b981' : '#ef4444' }]}>
-              {(backtestResult.total_return * 100).toFixed(2)}%
-            </Text>
-          </View>
-          
-          <View style={styles.resultCard}>
-            <Text style={styles.resultLabel}>Sharpe Ratio</Text>
-            <Text style={styles.resultValue}>{backtestResult.sharpe_ratio.toFixed(2)}</Text>
-          </View>
-          
-          <View style={styles.resultCard}>
-            <Text style={styles.resultLabel}>Maksimum Düşüş</Text>
-            <Text style={[styles.resultValue, { color: '#ef4444' }]}>
-              {(backtestResult.max_drawdown * 100).toFixed(2)}%
-            </Text>
-          </View>
-          
-          <View style={styles.resultCard}>
-            <Text style={styles.resultLabel}>Kazanma Oranı</Text>
-            <Text style={styles.resultValue}>{(backtestResult.win_rate * 100).toFixed(1)}%</Text>
-          </View>
-          
-          <View style={styles.resultCard}>
-            <Text style={styles.resultLabel}>Toplam İşlem</Text>
-            <Text style={styles.resultValue}>{backtestResult.total_trades}</Text>
-          </View>
-          
-          <View style={styles.resultCard}>
-            <Text style={styles.resultLabel}>Final Değer</Text>
-            <Text style={styles.resultValue}>
-              ${backtestResult.final_portfolio_value.toLocaleString()}
-            </Text>
-          </View>
-        </View>
-
-        <TouchableOpacity style={styles.saveButton} onPress={handleSaveStrategy}>
-          <Text style={styles.saveButtonText}>💾 Stratejiyi Kaydet ve Aktifleştir</Text>
-        </TouchableOpacity>
-      </View>
-    );
+  const getGradeColor = (grade: string): string => {
+    if (grade.startsWith('A')) return '#10b981';
+    if (grade.startsWith('B')) return '#059669';
+    if (grade.startsWith('C')) return '#f59e0b';
+    if (grade.startsWith('D')) return '#ef4444';
+    return '#dc2626';
   };
 
   return (
-    <LinearGradient
-      colors={['#667eea', '#764ba2']}
-      style={styles.container}
-    >
+    <LinearGradient colors={['#667eea', '#764ba2']} style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+        <TouchableOpacity 
+          style={styles.backButton} 
+          onPress={() => navigation.goBack()}
+        >
           <Text style={styles.backButtonText}>← Geri</Text>
         </TouchableOpacity>
-        <Text style={styles.title}>{displayName} Strateji Test</Text>
+        <Text style={styles.title}>Strateji Test</Text>
+        <View style={styles.userSection}>
+          {user ? (
+            <TouchableOpacity 
+              style={styles.profileButton}
+              onPress={() => navigation.navigate('MainTabs', { screen: 'Profile' })}
+            >
+              <Text style={styles.profileButtonText}>👤 {user.first_name}</Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity 
+              style={styles.loginButton}
+              onPress={() => navigation.navigate('AuthStack', { screen: 'Login', params: { returnTo: 'Dashboard' } })}
+            >
+              <Text style={styles.loginButtonText}>👤 Giriş</Text>
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        <View style={styles.formContainer}>
-          <Text style={styles.sectionTitle}>Strateji Bilgileri</Text>
-          
-          <View style={styles.inputContainer}>
-            <Text style={styles.inputLabel}>Strateji Adı</Text>
-            <TextInput
-              style={styles.input}
-              value={strategyName}
-              onChangeText={setStrategyName}
-              placeholder="Strateji adını giriniz"
-              placeholderTextColor="#999"
-            />
-          </View>
-
-          <View style={styles.inputContainer}>
-            <Text style={styles.inputLabel}>Açıklama</Text>
-            <TextInput
-              style={[styles.input, styles.textArea]}
-              value={description}
-              onChangeText={setDescription}
-              placeholder="Strateji açıklaması (opsiyonel)"
-              placeholderTextColor="#999"
-              multiline
-              numberOfLines={3}
-            />
-          </View>
-
-          <Text style={styles.sectionTitle}>Teknik İndikatör Parametreleri</Text>
-
-          <View style={styles.parameterGrid}>
-            {renderParameterInput('bb_period', 'Bollinger Bands Periyot', '20')}
-            {renderParameterInput('bb_std', 'Bollinger Bands Standart Sapma', '2.0')}
-            {renderParameterInput('macd_fast', 'MACD Hızlı Periyot', '12')}
-            {renderParameterInput('macd_slow', 'MACD Yavaş Periyot', '26')}
-            {renderParameterInput('macd_signal', 'MACD Sinyal Periyot', '9')}
-            {renderParameterInput('rsi_period', 'RSI Periyot', '14')}
-            {renderParameterInput('rsi_overbought', 'RSI Aşırı Alım', '70')}
-            {renderParameterInput('rsi_oversold', 'RSI Aşırı Satım', '30')}
-          </View>
-
-          <Text style={styles.sectionTitle}>Risk Yönetimi</Text>
-          
-          <View style={styles.parameterGrid}>
-            {renderParameterInput('position_size', 'Pozisyon Büyüklüğü', '0.1')}
-            {renderParameterInput('stop_loss', 'Stop Loss (%)', '2')}
-            {renderParameterInput('take_profit', 'Take Profit (%)', '4')}
-          </View>
-
-          <TouchableOpacity
-            style={[styles.testButton, isLoading && styles.disabledButton]}
-            onPress={handleTestStrategy}
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <ActivityIndicator color="white" />
-            ) : (
-              <Text style={styles.testButtonText}>🧪 Stratejiyi Test Et</Text>
-            )}
-          </TouchableOpacity>
-
-          {renderBacktestResult()}
+      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+        {/* Asset Info */}
+        <View style={styles.assetCard}>
+          <Text style={styles.assetName}>{displayName} ({symbol.replace('USDT', '')})</Text>
+          <Text style={styles.assetPrice}>
+            ${currentPrice.toLocaleString()} 
+            <Text style={[styles.priceChange, { color: priceChange24h >= 0 ? '#10b981' : '#ef4444' }]}>
+              {' '}({priceChange24h >= 0 ? '+' : ''}{priceChange24h.toFixed(2)}%)
+            </Text>
+          </Text>
         </View>
+
+        {/* Compact Parameters */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>📊 Parametreler</Text>
+          
+          <View style={styles.paramGrid}>
+            <View style={styles.paramItem}>
+              <Text style={styles.paramLabel}>BB Periyot</Text>
+              <TextInput
+                style={styles.paramInput}
+                value={parameters.bb_period}
+                onChangeText={(value) => updateParameter('bb_period', value)}
+                keyboardType="numeric"
+              />
+            </View>
+            
+            <View style={styles.paramItem}>
+              <Text style={styles.paramLabel}>BB Std Sapma</Text>
+              <TextInput
+                style={styles.paramInput}
+                value={parameters.bb_std}
+                onChangeText={(value) => updateParameter('bb_std', value)}
+                keyboardType="numeric"
+              />
+            </View>
+            
+            <View style={styles.paramItem}>
+              <Text style={styles.paramLabel}>MACD Hızlı</Text>
+              <TextInput
+                style={styles.paramInput}
+                value={parameters.macd_fast}
+                onChangeText={(value) => updateParameter('macd_fast', value)}
+                keyboardType="numeric"
+              />
+            </View>
+            
+            <View style={styles.paramItem}>
+              <Text style={styles.paramLabel}>MACD Yavaş</Text>
+              <TextInput
+                style={styles.paramInput}
+                value={parameters.macd_slow}
+                onChangeText={(value) => updateParameter('macd_slow', value)}
+                keyboardType="numeric"
+              />
+            </View>
+            
+            <View style={styles.paramItem}>
+              <Text style={styles.paramLabel}>MACD Sinyal</Text>
+              <TextInput
+                style={styles.paramInput}
+                value={parameters.macd_signal}
+                onChangeText={(value) => updateParameter('macd_signal', value)}
+                keyboardType="numeric"
+              />
+            </View>
+            
+            <View style={styles.paramItem}>
+              <Text style={styles.paramLabel}>RSI Periyot</Text>
+              <TextInput
+                style={styles.paramInput}
+                value={parameters.rsi_period}
+                onChangeText={(value) => updateParameter('rsi_period', value)}
+                keyboardType="numeric"
+              />
+            </View>
+            
+            <View style={styles.paramItem}>
+              <Text style={styles.paramLabel}>RSI Aşırı Alım</Text>
+              <TextInput
+                style={styles.paramInput}
+                value={parameters.rsi_overbought}
+                onChangeText={(value) => updateParameter('rsi_overbought', value)}
+                keyboardType="numeric"
+              />
+            </View>
+            
+            <View style={styles.paramItem}>
+              <Text style={styles.paramLabel}>RSI Aşırı Satım</Text>
+              <TextInput
+                style={styles.paramInput}
+                value={parameters.rsi_oversold}
+                onChangeText={(value) => updateParameter('rsi_oversold', value)}
+                keyboardType="numeric"
+              />
+            </View>
+          </View>
+        </View>
+
+        {/* Test Button */}
+        <TouchableOpacity
+          style={styles.testButton}
+          onPress={runBacktest}
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <ActivityIndicator color="white" />
+          ) : (
+            <Text style={styles.testButtonText}>🧪 Test Stratejisi</Text>
+          )}
+        </TouchableOpacity>
+
+        {/* Results */}
+        {backtestResult && (
+          <View style={styles.resultsSection}>
+            <View style={styles.resultsHeader}>
+              <Text style={styles.resultsTitle}>📈 Test Sonuçları</Text>
+              <View style={[
+                styles.gradeBadge,
+                { backgroundColor: getGradeColor(getPerformanceGrade(backtestResult.total_return)) }
+              ]}>
+                <Text style={styles.gradeText}>{getPerformanceGrade(backtestResult.total_return)}</Text>
+              </View>
+            </View>
+            
+            <View style={styles.metricsGrid}>
+              <View style={styles.metric}>
+                <Text style={styles.metricLabel}>Toplam Getiri</Text>
+                <Text style={[
+                  styles.metricValue,
+                  { color: backtestResult.total_return >= 0 ? '#10b981' : '#ef4444' }
+                ]}>
+                  {backtestResult.total_return >= 0 ? '+' : ''}{backtestResult.total_return.toFixed(2)}%
+                </Text>
+              </View>
+              
+              <View style={styles.metric}>
+                <Text style={styles.metricLabel}>Sharpe Ratio</Text>
+                <Text style={styles.metricValue}>{backtestResult.sharpe_ratio.toFixed(2)}</Text>
+              </View>
+              
+              <View style={styles.metric}>
+                <Text style={styles.metricLabel}>Max Düşüş</Text>
+                <Text style={[styles.metricValue, { color: '#ef4444' }]}>
+                  {backtestResult.max_drawdown.toFixed(2)}%
+                </Text>
+              </View>
+              
+              <View style={styles.metric}>
+                <Text style={styles.metricLabel}>Kazanç Oranı</Text>
+                <Text style={styles.metricValue}>{backtestResult.win_rate.toFixed(1)}%</Text>
+              </View>
+            </View>
+
+            {/* Save Strategy Button */}
+            <TouchableOpacity
+              style={styles.saveButton}
+              onPress={handleSavePress}
+            >
+              <Text style={styles.saveButtonText}>💾 Strateji Kaydet</Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </ScrollView>
+
+      {/* Save Modal */}
+      <Modal
+        visible={showSaveModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowSaveModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Strateji Kaydet</Text>
+              <TouchableOpacity
+                onPress={() => setShowSaveModal(false)}
+                style={styles.modalCloseButton}
+              >
+                <Text style={styles.modalCloseText}>✕</Text>
+              </TouchableOpacity>
+            </View>
+            
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Strateji Adı *</Text>
+              <TextInput
+                style={styles.textInput}
+                value={strategyName}
+                onChangeText={setStrategyName}
+                placeholder="Örn: BTC Momentum Strategy"
+                placeholderTextColor="#999"
+              />
+            </View>
+            
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Açıklama</Text>
+              <TextInput
+                style={[styles.textInput, styles.textArea]}
+                value={description}
+                onChangeText={setDescription}
+                placeholder="Strateji hakkında kısa açıklama (opsiyonel)"
+                placeholderTextColor="#999"
+                multiline
+                numberOfLines={3}
+              />
+            </View>
+            
+            <TouchableOpacity
+              style={[styles.modalSaveButton, { opacity: isLoading ? 0.6 : 1 }]}
+              onPress={handleSaveStrategy}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <ActivityIndicator color="white" />
+              ) : (
+                <Text style={styles.modalSaveButtonText}>💾 Kaydet</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </LinearGradient>
   );
 };
@@ -304,12 +430,13 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingTop: 60,
-    paddingBottom: 20,
+    paddingTop: 50,
+    paddingBottom: 15,
   },
   backButton: {
-    marginRight: 15,
+    padding: 8,
   },
   backButtonText: {
     color: 'white',
@@ -321,14 +448,38 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
   },
-  content: {
+  placeholder: {
+    width: 60,
+  },
+  scrollView: {
     flex: 1,
     paddingHorizontal: 20,
   },
-  formContainer: {
+  assetCard: {
     backgroundColor: 'rgba(255, 255, 255, 0.95)',
-    borderRadius: 20,
-    padding: 25,
+    borderRadius: 15,
+    padding: 20,
+    marginBottom: 20,
+    alignItems: 'center',
+  },
+  assetName: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 8,
+  },
+  assetPrice: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#666',
+  },
+  priceChange: {
+    fontSize: 16,
+  },
+  section: {
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    borderRadius: 15,
+    padding: 20,
     marginBottom: 20,
   },
   sectionTitle: {
@@ -336,95 +487,190 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#333',
     marginBottom: 15,
-    marginTop: 10,
   },
-  inputContainer: {
+  paramGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  paramItem: {
+    width: '48%',
     marginBottom: 15,
   },
-  inputLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 8,
+  paramLabel: {
+    fontSize: 12,
+    color: '#666',
+    marginBottom: 5,
+    fontWeight: '500',
   },
-  input: {
+  paramInput: {
     backgroundColor: '#f8fafc',
-    borderRadius: 12,
-    padding: 12,
-    fontSize: 16,
+    borderRadius: 8,
+    padding: 10,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
-  },
-  textArea: {
-    height: 80,
-    textAlignVertical: 'top',
-  },
-  parameterGrid: {
-    marginBottom: 20,
+    borderColor: '#e5e7eb',
+    fontSize: 14,
+    color: '#333',
   },
   testButton: {
     backgroundColor: '#667eea',
-    borderRadius: 12,
-    padding: 15,
+    borderRadius: 15,
+    padding: 16,
     alignItems: 'center',
-    marginTop: 20,
-  },
-  disabledButton: {
-    backgroundColor: '#ccc',
+    marginBottom: 20,
   },
   testButtonText: {
     color: 'white',
     fontSize: 16,
     fontWeight: '600',
   },
-  resultContainer: {
-    marginTop: 30,
-    paddingTop: 20,
-    borderTopWidth: 1,
-    borderTopColor: '#e2e8f0',
+  resultsSection: {
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    borderRadius: 15,
+    padding: 20,
+    marginBottom: 30,
   },
-  resultTitle: {
+  resultsHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+  resultsTitle: {
     fontSize: 18,
     fontWeight: 'bold',
     color: '#333',
-    marginBottom: 20,
-    textAlign: 'center',
   },
-  resultGrid: {
+  gradeBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+  },
+  gradeText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  metricsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
     marginBottom: 20,
   },
-  resultCard: {
-    backgroundColor: '#f8fafc',
-    borderRadius: 10,
-    padding: 15,
+  metric: {
     width: '48%',
-    marginBottom: 10,
     alignItems: 'center',
+    marginBottom: 10,
   },
-  resultLabel: {
+  metricLabel: {
     fontSize: 12,
-    color: '#64748b',
-    marginBottom: 5,
-    textAlign: 'center',
+    color: '#666',
+    marginBottom: 4,
   },
-  resultValue: {
-    fontSize: 16,
+  metricValue: {
+    fontSize: 18,
     fontWeight: 'bold',
-    color: '#1e293b',
-    textAlign: 'center',
+    color: '#333',
   },
   saveButton: {
     backgroundColor: '#10b981',
     borderRadius: 12,
-    padding: 15,
+    padding: 14,
     alignItems: 'center',
   },
   saveButtonText: {
     color: 'white',
     fontSize: 16,
+    fontWeight: '600',
+  },
+  // Modal Styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    borderRadius: 15,
+    padding: 20,
+    width: '90%',
+    maxHeight: '80%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  modalCloseButton: {
+    padding: 8,
+  },
+  modalCloseText: {
+    fontSize: 20,
+    color: '#666',
+  },
+  inputGroup: {
+    marginBottom: 20,
+  },
+  inputLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 8,
+  },
+  textInput: {
+    backgroundColor: '#f8fafc',
+    borderRadius: 10,
+    padding: 12,
+    fontSize: 16,
+    color: '#333',
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+  },
+  textArea: {
+    height: 80,
+    textAlignVertical: 'top',
+  },
+  modalSaveButton: {
+    backgroundColor: '#10b981',
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+  },
+  modalSaveButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  userSection: {
+    alignItems: 'flex-end',
+  },
+  loginButton: {
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 15,
+  },
+  loginButtonText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  profileButton: {
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 15,
+  },
+  profileButtonText: {
+    color: 'white',
+    fontSize: 14,
     fontWeight: '600',
   },
 });

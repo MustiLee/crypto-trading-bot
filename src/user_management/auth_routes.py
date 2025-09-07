@@ -152,6 +152,13 @@ class QuickTestRequest(BaseModel):
         return v
 
 
+class VerifyCodeRequest(BaseModel):
+    code: str
+
+class ResendVerificationRequest(BaseModel):
+    email: EmailStr
+
+
 # Security
 security = HTTPBearer()
 
@@ -820,12 +827,7 @@ async def save_tested_strategy(
         warnings = []
         if total_return < 0:
             warnings.append("Strategy has negative returns")
-class VerifyCodeRequest(BaseModel):
-    code: str
-
-class ResendVerificationRequest(BaseModel):
-    email: EmailStr
-
+        
         if max_drawdown > 20:
             warnings.append("Strategy has high risk (>20% drawdown)")
         if metrics.get('total_trades', 0) < 10:

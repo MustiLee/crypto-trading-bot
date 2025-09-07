@@ -325,3 +325,96 @@ class TradingDBManager:
         except Exception as e:
             logger.error(f"Database connection test failed: {e}")
             return False
+
+    # ----- Symbol configuration management -----
+    def ensure_symbols_table(self) -> bool:
+        """Create symbol_configs table if it does not exist"""
+        try:
+            with self.get_connection() as conn:
+                with conn.cursor() as cursor:
+                    cursor.execute(
+                        """
+                        CREATE TABLE IF NOT EXISTS symbol_configs (
+                            key TEXT PRIMARY KEY,
+                            symbol TEXT NOT NULL,
+                            display_name TEXT NOT NULL,
+                            min_notional NUMERIC,
+                            precision INTEGER,
+                            strategy TEXT,
+                            strategy_type TEXT,
+                            updated_at TIMESTAMPTZ DEFAULT NOW()
+                        );
+                        """
+                    )
+                    conn.commit()
+                    return True
+        except Exception as e:
+            logger.error(f"Error ensuring symbol_configs table: {e}")
+            return False
+
+    def get_symbol_configs(self) -> Dict[str, Dict]:
+        """Fetch symbol configurations as a dict keyed by symbol key (e.g., 'BTC')"""
+        try:
+            with self.get_connection() as conn:
+                with conn.cursor() as cursor:
+                    cursor.execute(
+                        """
+                        SELECT key, symbol, display_name, min_notional, precision, strategy, strategy_type
+                        FROM symbol_configs
+                        ORDER BY key ASC;
+                        """
+                    )
+                    rows = cursor.fetchall()
+                    if not rows:
+                        return {}
+                    result: Dict[str, Dict] = {}
+                    for row in rows:
+                        result[row['key']] = {
+                            'symbol': row['symbol'],
+                            'display_name': row['display_name'],
+                            'min_notional': float(row['min_notional']) if row['min_notional'] is not None else None,
+                            'precision': int(row['precision']) if row['precision'] is not None else None,
+                            'strategy': row['strategy'],
+                            'strategy_type': row['strategy_type'],
+                        }
+                    return result
+        except Exception as e:
+            logger.error(f"Error fetching symbol configs: {e}")
+            return {}
+
+    def upsert_symbol_configs(self, symbols: Dict[str, Dict]) -> bool:
+        """Upsert provided symbol configs into DB"""
+        if not symbols:
+            return True
+        try:
+            with self.get_connection() as conn:
+                with conn.cursor() as cursor:
+                    for key, cfg in symbols.items():
+                        cursor.execute(
+                            """
+                            INSERT INTO symbol_configs (key, symbol, display_name, min_notional, precision, strategy, strategy_type)
+                            VALUES (%(key)s, %(symbol)s, %(display_name)s, %(min_notional)s, %(precision)s, %(strategy)s, %(strategy_type)s)
+                            ON CONFLICT (key) DO UPDATE SET
+                                symbol = EXCLUDED.symbol,
+                                display_name = EXCLUDED.display_name,
+                                min_notional = EXCLUDED.min_notional,
+                                precision = EXCLUDED.precision,
+                                strategy = EXCLUDED.strategy,
+                                strategy_type = EXCLUDED.strategy_type,
+                                updated_at = NOW();
+                            """,
+                            {
+                                'key': key,
+                                'symbol': cfg.get('symbol'),
+                                'display_name': cfg.get('display_name'),
+                                'min_notional': cfg.get('min_notional'),
+                                'precision': cfg.get('precision'),
+                                'strategy': cfg.get('strategy'),
+                                'strategy_type': cfg.get('strategy_type'),
+                            }
+                        )
+                conn.commit()
+                return True
+        except Exception as e:
+            logger.error(f"Error upserting symbol configs: {e}")
+            return False

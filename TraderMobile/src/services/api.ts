@@ -8,6 +8,7 @@ import { User, UserSession, StrategyConfig, BacktestResult } from '../types';
 const STORAGE_KEYS = {
   SESSION_TOKEN: 'session_token',
   USER_DATA: 'user_data',
+  SYMBOLS_CONFIG: 'symbols_config_v1',
 };
 
 class ApiService {
@@ -183,6 +184,49 @@ class ApiService {
     await AsyncStorage.multiRemove([STORAGE_KEYS.SESSION_TOKEN, STORAGE_KEYS.USER_DATA]);
   }
 
+  // Profile update
+  async updateProfile(partial: {
+    first_name?: string;
+    last_name?: string;
+    phone?: string;
+    telegram_id?: string;
+  }): Promise<{ success: boolean; message: string }> {
+    const response = await fetch(`${API_BASE_URL}/auth/me`, {
+      method: 'PUT',
+      headers: await this.getHeaders(),
+      body: JSON.stringify(partial),
+    });
+    return await this.handleResponse(response);
+  }
+
+  // Password reset flow
+  async requestPasswordReset(email: string): Promise<{ success: boolean; message: string }> {
+    const response = await fetch(`${API_BASE_URL}/auth/request-password-reset`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    });
+    return await this.handleResponse(response);
+  }
+
+  async verifyPasswordReset(email: string, code: string): Promise<{ success: boolean; message: string }> {
+    const response = await fetch(`${API_BASE_URL}/auth/verify-password-reset`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, verification_code: code }),
+    });
+    return await this.handleResponse(response);
+  }
+
+  async resetPassword(email: string, newPassword: string): Promise<{ success: boolean; message: string }> {
+    const response = await fetch(`${API_BASE_URL}/auth/reset-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, new_password: newPassword }),
+    });
+    return await this.handleResponse(response);
+  }
+
   async getCurrentUser(): Promise<User | null> {
     const userData = await AsyncStorage.getItem(STORAGE_KEYS.USER_DATA);
     if (!userData || !this.sessionToken) {
@@ -250,6 +294,57 @@ class ApiService {
   async getSymbolData(): Promise<{ [symbol: string]: any }> {
     const response = await fetch(`${API_BASE_URL}/dashboard/symbols`, {
       headers: await this.getHeaders(),
+    });
+
+    return await this.handleResponse(response);
+  }
+
+  async getSymbolsConfig(): Promise<{ symbols: Record<string, any>; interval: string }> {
+    const response = await fetch(`${API_BASE_URL}/api/symbols`, {
+      headers: await this.getHeaders(),
+    });
+    return await this.handleResponse(response);
+  }
+
+  async getSymbolsCached(maxAgeMs: number = 5 * 60 * 1000): Promise<{ symbols: Record<string, any>; interval: string } | null> {
+    try {
+      const cached = await AsyncStorage.getItem(STORAGE_KEYS.SYMBOLS_CONFIG);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        const ts = parsed?.__ts as number | undefined;
+        if (ts && Date.now() - ts < maxAgeMs && parsed?.symbols) {
+          return { symbols: parsed.symbols, interval: parsed.interval };
+        }
+      }
+    } catch {}
+
+    try {
+      const fresh = await this.getSymbolsConfig();
+      await AsyncStorage.setItem(
+        STORAGE_KEYS.SYMBOLS_CONFIG,
+        JSON.stringify({ ...fresh, __ts: Date.now() })
+      );
+      return fresh;
+    } catch (e) {
+      console.warn('Failed to fetch symbols config:', e);
+      return null;
+    }
+  }
+
+  // User Layout Preferences APIs
+  async getUserLayoutPreferences(): Promise<{ asset_order?: string[] }> {
+    const response = await fetch(`${API_BASE_URL}/api/user/layout-preferences`, {
+      headers: await this.getHeaders(),
+    });
+
+    return await this.handleResponse(response);
+  }
+
+  async saveUserLayoutPreferences(preferences: { asset_order: string[] }): Promise<{ success: boolean }> {
+    const response = await fetch(`${API_BASE_URL}/api/user/layout-preferences`, {
+      method: 'POST',
+      headers: await this.getHeaders(),
+      body: JSON.stringify(preferences),
     });
 
     return await this.handleResponse(response);

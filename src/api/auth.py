@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Depends, status
+from fastapi import APIRouter, HTTPException, Depends, status, Body, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel, EmailStr
 from typing import Optional
@@ -58,6 +58,23 @@ class VerifyEmailRequest(BaseModel):
     email: EmailStr
     verification_code: str
 
+class PasswordResetRequest(BaseModel):
+    email: EmailStr
+
+class PasswordResetVerifyRequest(BaseModel):
+    email: EmailStr
+    verification_code: str
+
+class PasswordResetFinalizeRequest(BaseModel):
+    email: EmailStr
+    new_password: str
+
+class UpdateProfileRequest(BaseModel):
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    phone: Optional[str] = None
+    telegram_id: Optional[str] = None
+
 # JWT settings
 JWT_SECRET = os.getenv('JWT_SECRET', 'your-secret-key-change-in-production')
 JWT_ALGORITHM = 'HS256'
@@ -68,6 +85,7 @@ SMTP_SERVER = os.getenv('SMTP_SERVER', 'smtp.gmail.com')
 SMTP_PORT = int(os.getenv('SMTP_PORT', '587'))
 SMTP_EMAIL = os.getenv('SMTP_EMAIL', '')
 SMTP_PASSWORD = os.getenv('SMTP_PASSWORD', '')
+AUTH_TEST_MODE = os.getenv('AUTH_TEST_MODE', 'true').lower() == 'true'
 
 def hash_password(password: str) -> str:
     """Hash password using SHA-256 with salt"""
@@ -93,13 +111,53 @@ def generate_jwt_token(user_id: str) -> str:
     return jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
 
 def generate_verification_code() -> str:
-    """Generate 6-digit verification code"""
-    return "123456"  # Fixed test code for development
+    """Generate 6-digit verification code. Fixed in test mode."""
+    if AUTH_TEST_MODE:
+        return "111111"
+    return f"{secrets.randbelow(1000000):06d}"
 
-async def send_verification_email(email: str, verification_code: str):
-    """Send verification email - Skip for test mode"""
-    logger.info(f"Test mode: Verification code for {email} is {verification_code}")
-    return  # Skip actual email sending in test mode
+async def send_verification_email(email: str, verification_code: str, purpose: str = "verification"):
+    """Send verification/reset email. Skips SMTP in test mode."""
+    subject_map = {
+        "verification": "E-posta Doğrulama Kodu",
+        "password_reset": "Şifre Sıfırlama Kodu",
+    }
+    subject = subject_map.get(purpose, "Doğrulama Kodu")
+    html_body = f"""
+    <html><body>
+      <h2>{subject}</h2>
+      <p>Kodunuz:</p>
+      <div style='font-size:24px;font-weight:700;letter-spacing:3px'>{verification_code}</div>
+      <p>Bu kod 10 dakika içinde geçerlidir.</p>
+    </body></html>
+    """
+    if AUTH_TEST_MODE:
+        logger.info(f"Test mode: {purpose} code for {email} is {verification_code}")
+        return
+    try:
+        msg = MIMEMultipart('alternative')
+        msg['Subject'] = subject
+        msg['From'] = SMTP_EMAIL
+        msg['To'] = email
+        msg.attach(MIMEText(html_body, 'html'))
+        with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
+            server.starttls()
+            if SMTP_EMAIL and SMTP_PASSWORD:
+                server.login(SMTP_EMAIL, SMTP_PASSWORD)
+            server.sendmail(SMTP_EMAIL, [email], msg.as_string())
+    except Exception as e:
+        logger.error(f"Failed to send {purpose} email to {email}: {e}")
+
+def validate_password_strength(password: str) -> Optional[str]:
+    """Return None if strong; otherwise return message describing issue"""
+    if len(password) < 8:
+        return "Şifre en az 8 karakter olmalıdır."
+    has_upper = any(c.isupper() for c in password)
+    has_lower = any(c.islower() for c in password)
+    has_digit = any(c.isdigit() for c in password)
+    if not (has_upper and has_lower and has_digit):
+        return "Şifre büyük/küçük harf ve rakam içermelidir."
+    return None
 
 def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
     """Get current user from JWT token"""
@@ -142,6 +200,10 @@ async def register_user(request: RegisterRequest):
                 message="Bu email adresi zaten kullanılıyor."
             )
         
+        # Validate password
+        pw_err = validate_password_strength(request.password)
+        if pw_err:
+            return RegisterResponse(success=False, message=pw_err)
         # Hash password
         hashed_password = hash_password(request.password)
         
@@ -181,7 +243,7 @@ async def register_user(request: RegisterRequest):
         conn.close()
         
         # Send verification email
-        await send_verification_email(request.email, verification_code)
+        await send_verification_email(request.email, verification_code, purpose="verification")
         
         return RegisterResponse(
             success=True,
@@ -276,6 +338,17 @@ async def resend_verification_code(request: VerificationCodeRequest):
                 message="Bu email için bekleyen bir kayıt bulunamadı."
             )
         
+        # Simple throttle: limit 1 resend per 60 seconds
+        with conn.cursor(cursor_factory=RealDictCursor) as cursor:
+            cursor.execute(
+                "SELECT created_at FROM email_verifications WHERE email = %s",
+                (request.email,),
+            )
+            prev = cursor.fetchone()
+        if prev and prev.get('created_at') and (datetime.now(timezone.utc) - prev['created_at']).total_seconds() < 60:
+            conn.close()
+            return RegisterResponse(success=False, message="Çok sık istek yapıldı. Lütfen 1 dakika sonra tekrar deneyin.")
+
         # Generate new verification code
         verification_code = generate_verification_code()
         expire_time = datetime.now(timezone.utc) + timedelta(minutes=10)
@@ -284,14 +357,14 @@ async def resend_verification_code(request: VerificationCodeRequest):
         with conn.cursor() as cursor:
             cursor.execute("""
                 UPDATE email_verifications 
-                SET verification_code = %s, expires_at = %s
+                SET verification_code = %s, expires_at = %s, created_at = NOW()
                 WHERE email = %s
             """, (verification_code, expire_time, request.email))
             conn.commit()
         conn.close()
         
         # Send verification email
-        await send_verification_email(request.email, verification_code)
+        await send_verification_email(request.email, verification_code, purpose="verification")
         
         return RegisterResponse(
             success=True,
@@ -325,7 +398,7 @@ async def login_user(request: LoginRequest):
             conn.close()
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Geçersiz email veya şifre"
+                detail={"code": "AUTH_INVALID", "message": "Geçersiz email veya şifre"}
             )
         
         user = result
@@ -335,7 +408,7 @@ async def login_user(request: LoginRequest):
             conn.close()
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Geçersiz email veya şifre"
+                detail={"code": "AUTH_INVALID", "message": "Geçersiz email veya şifre"}
             )
         
         # Generate JWT token
@@ -452,3 +525,131 @@ async def get_current_user_info(user_id: str = Depends(get_current_user)):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Kullanıcı bilgileri alınırken bir hata oluştu"
         )
+
+@router.put("/me")
+async def update_current_user_info(req: UpdateProfileRequest, user_id: str = Depends(get_current_user)):
+    """Update current user information"""
+    db = Database()
+    try:
+        fields = []
+        values = []
+        if req.first_name is not None:
+            fields.append('first_name = %s')
+            values.append(req.first_name)
+        if req.last_name is not None:
+            fields.append('last_name = %s')
+            values.append(req.last_name)
+        if req.phone is not None:
+            fields.append('phone = %s')
+            values.append(req.phone)
+        if req.telegram_id is not None:
+            fields.append('telegram_id = %s')
+            values.append(req.telegram_id)
+        if not fields:
+            return {"success": True, "message": "Güncellenecek alan yok"}
+        values.append(user_id)
+        set_clause = ', '.join(fields)
+        conn = db.get_connection()
+        with conn.cursor() as cursor:
+            cursor.execute(f"UPDATE users SET {set_clause} WHERE id = %s", tuple(values))
+            conn.commit()
+        conn.close()
+        return {"success": True, "message": "Profil güncellendi"}
+    except Exception as e:
+        logger.error(f"Update user error: {e}")
+        raise HTTPException(status_code=500, detail="Profil güncellenemedi")
+
+@router.post("/request-password-reset")
+async def request_password_reset(req: PasswordResetRequest):
+    """Initiate password reset by verifying email+phone and issuing a verification code"""
+    db = Database()
+    try:
+        email_value = req.email.strip()
+        if not email_value:
+            raise HTTPException(status_code=400, detail="Email gerekli")
+        conn = db.get_connection()
+        with conn.cursor(cursor_factory=RealDictCursor) as cursor:
+            cursor.execute("SELECT id, is_active FROM users WHERE lower(email) = lower(%s)", (email_value,))
+            user = cursor.fetchone()
+        if not user:
+            conn.close()
+            if AUTH_TEST_MODE:
+                logger.info(f"Password reset request: user not found for email={email_value}")
+            return {"success": False, "message": "Kullanıcı bulunamadı"}
+        if not user.get('is_active'):
+            conn.close()
+            if AUTH_TEST_MODE:
+                logger.info(f"Password reset request: user inactive for email={email_value}")
+            return {"success": False, "message": "Hesap aktif değil. Lütfen email doğrulamasını tamamlayın."}
+        # Simple throttle: limit 1 request per 60 seconds
+        with conn.cursor(cursor_factory=RealDictCursor) as cursor:
+            cursor.execute(
+                "SELECT created_at FROM email_verifications WHERE email = %s",
+                (email_value,),
+            )
+            prev = cursor.fetchone()
+        if prev and prev.get('created_at') and (datetime.now(timezone.utc) - prev['created_at']).total_seconds() < 60:
+            conn.close()
+            return {"success": False, "message": "Çok sık istek yapıldı. Lütfen 1 dakika sonra tekrar deneyin."}
+        code = generate_verification_code()
+        expire_time = datetime.now(timezone.utc) + timedelta(minutes=10)
+        with conn.cursor() as cursor:
+            cursor.execute(
+                """
+                INSERT INTO email_verifications (email, verification_code, expires_at)
+                VALUES (%s, %s, %s)
+                ON CONFLICT (email) DO UPDATE SET
+                    verification_code = EXCLUDED.verification_code,
+                    expires_at = EXCLUDED.expires_at,
+                    created_at = NOW()
+                """,
+                (email_value, code, expire_time),
+            )
+            conn.commit()
+        conn.close()
+        # Send reset email (uses SMTP outside test mode)
+        await send_verification_email(email_value, code, purpose="password_reset")
+        return {"success": True, "message": "Doğrulama kodu gönderildi"}
+    except Exception as e:
+        logger.error(f"Request password reset error: {e}")
+        raise HTTPException(status_code=500, detail="İşlem başarısız")
+
+@router.post("/verify-password-reset")
+async def verify_password_reset(req: PasswordResetVerifyRequest):
+    db = Database()
+    try:
+        conn = db.get_connection()
+        with conn.cursor(cursor_factory=RealDictCursor) as cursor:
+            cursor.execute(
+                "SELECT verification_code FROM email_verifications WHERE email = %s AND expires_at > NOW()",
+                (req.email,),
+            )
+            row = cursor.fetchone()
+        conn.close()
+        if not row or row['verification_code'] != req.verification_code:
+            return {"success": False, "message": "Geçersiz doğrulama kodu"}
+        return {"success": True, "message": "Doğrulandı"}
+    except Exception as e:
+        logger.error(f"Verify password reset error: {e}")
+        raise HTTPException(status_code=500, detail="İşlem başarısız")
+
+@router.post("/reset-password")
+async def reset_password(req: PasswordResetFinalizeRequest):
+    db = Database()
+    try:
+        # Validate new password
+        pw_err = validate_password_strength(req.new_password)
+        if pw_err:
+            return {"success": False, "message": pw_err}
+        # Hash new password
+        hashed = hash_password(req.new_password)
+        conn = db.get_connection()
+        with conn.cursor() as cursor:
+            cursor.execute("UPDATE users SET password_hash = %s WHERE email = %s AND is_active = true", (hashed, req.email))
+            cursor.execute("DELETE FROM email_verifications WHERE email = %s", (req.email,))
+            conn.commit()
+        conn.close()
+        return {"success": True, "message": "Şifre güncellendi"}
+    except Exception as e:
+        logger.error(f"Reset password error: {e}")
+        raise HTTPException(status_code=500, detail="Şifre güncellenemedi")
