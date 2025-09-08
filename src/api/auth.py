@@ -616,6 +616,11 @@ async def request_password_reset(req: PasswordResetRequest):
 
 @router.post("/verify-password-reset")
 async def verify_password_reset(req: PasswordResetVerifyRequest):
+    # In test mode, accept the default code
+    if AUTH_TEST_MODE and req.verification_code == "111111":
+        logger.info(f"Test mode: Accepting default verification code for {req.email}")
+        return {"success": True, "message": "Doğrulandı"}
+    
     db = Database()
     try:
         conn = db.get_connection()

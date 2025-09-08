@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Trading Signal Alert - Crypto Trading Bot</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: #27ae60; color: white; padding: 20px; text-align: center; }
+        .content { padding: 20px; background: #f8f9fa; }
+        .signal-box { background: white; border-left: 4px solid #27ae60; padding: 15px; margin: 15px 0; }
+        .buy-signal { border-left-color: #27ae60; }
+        .sell-signal { border-left-color: #e74c3c; }
+        .footer { padding: 20px; text-align: center; font-size: 14px; color: #666; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Trading Signal Alert</h1>
+        </div>
+        <div class="content">
+            <h2>Hi {{ first_name }},</h2>
+            <p>A new trading signal has been generated for your monitored cryptocurrencies:</p>
+            <div class="signal-box {{ signal_type.lower() }}-signal">
+                <h3>{{ signal_type }} Signal for {{ symbol }}</h3>
+                <p><strong>Price:</strong> ${{ price }}</p>
+                <p><strong>Strategy:</strong> {{ strategy }}</p>
+                <p><strong>Timestamp:</strong> {{ timestamp }}</p>
+                {% if rsi %}<p><strong>RSI:</strong> {{ rsi }}</p>{% endif %}
+                {% if macd %}<p><strong>MACD:</strong> {{ macd }}</p>{% endif %}
+            </div>
+            <p><em>This is an automated notification. Please conduct your own analysis before making trading decisions.</em></p>
+        </div>
+        <div class="footer">
+            <p>Happy Trading!<br>The Crypto Trading Bot Team</p>
+        </div>
+    </div>
+</body>
+</html>

@@ -5,6 +5,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { StyleSheet, View, Text } from 'react-native';
 
 import { AuthProvider } from './src/context/AuthContext';
+import { PriceProvider } from './src/context/PriceContext';
 import AppNavigation from './src/navigation/AppNavigation';
 
 export default function App() {
@@ -14,8 +15,10 @@ export default function App() {
     <GestureHandlerRootView style={styles.container}>
       <SafeAreaProvider>
         <AuthProvider>
-          <AppNavigation />
-          <StatusBar style="light" />
+          <PriceProvider>
+            <AppNavigation />
+            <StatusBar style="light" />
+          </PriceProvider>
         </AuthProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>

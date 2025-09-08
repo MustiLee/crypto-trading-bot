@@ -28,15 +28,23 @@ except ImportError as e:
     API_AVAILABLE = False
     logger.warning(f"Mobile API routes not available: {e}")
 
-# Try to import auth router
+# Try to import auth router from both locations
+auth_router = None
+AUTH_AVAILABLE = False
+
 try:
-    from ..api.auth import router as auth_router
+    from ..user_management.auth_routes import router as auth_routes_router
+    auth_router = auth_routes_router
     AUTH_AVAILABLE = True
-    logger.info("Authentication routes loaded successfully")
-except ImportError as e:
-    auth_router = None
-    AUTH_AVAILABLE = False
-    logger.warning(f"Authentication routes not available: {e}")
+    logger.info("User management auth routes loaded successfully")
+except ImportError:
+    try:
+        from ..api.auth import router as api_auth_router  
+        auth_router = api_auth_router
+        AUTH_AVAILABLE = True
+        logger.info("API auth routes loaded successfully")
+    except ImportError as e:
+        logger.warning(f"No authentication routes available: {e}")
 
 
 class MultiSymbolWebSocketManager:

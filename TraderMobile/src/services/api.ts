@@ -60,7 +60,7 @@ class ApiService {
     console.log('Login attempt:', email);
     
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/login`, {
+      const response = await fetch(`${API_BASE_URL}/api/v1/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -97,7 +97,7 @@ class ApiService {
     console.log('Register attempt:', userData.email);
     
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/register`, {
+      const response = await fetch(`${API_BASE_URL}/api/v1/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -124,7 +124,7 @@ class ApiService {
 
   async verifyEmail(email: string, verificationCode: string): Promise<{ success: boolean; message: string }> {
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/verify-email`, {
+      const response = await fetch(`${API_BASE_URL}/api/v1/auth/verify-email`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -148,7 +148,7 @@ class ApiService {
 
   async resendVerificationCode(email: string): Promise<{ success: boolean; message: string }> {
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/resend-verification`, {
+      const response = await fetch(`${API_BASE_URL}/api/v1/auth/resend-verification`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -170,7 +170,7 @@ class ApiService {
   async logout(): Promise<void> {
     if (this.sessionToken) {
       try {
-        await fetch(`${API_BASE_URL}/auth/logout`, {
+        await fetch(`${API_BASE_URL}/api/v1/auth/logout`, {
           method: 'POST',
           headers: await this.getHeaders(),
         });
@@ -191,7 +191,7 @@ class ApiService {
     phone?: string;
     telegram_id?: string;
   }): Promise<{ success: boolean; message: string }> {
-    const response = await fetch(`${API_BASE_URL}/auth/me`, {
+    const response = await fetch(`${API_BASE_URL}/api/auth/me`, {
       method: 'PUT',
       headers: await this.getHeaders(),
       body: JSON.stringify(partial),
@@ -201,7 +201,7 @@ class ApiService {
 
   // Password reset flow
   async requestPasswordReset(email: string): Promise<{ success: boolean; message: string }> {
-    const response = await fetch(`${API_BASE_URL}/auth/request-password-reset`, {
+    const response = await fetch(`${API_BASE_URL}/api/v1/auth/request-password-reset`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email }),
@@ -210,7 +210,7 @@ class ApiService {
   }
 
   async verifyPasswordReset(email: string, code: string): Promise<{ success: boolean; message: string }> {
-    const response = await fetch(`${API_BASE_URL}/auth/verify-password-reset`, {
+    const response = await fetch(`${API_BASE_URL}/api/v1/auth/verify-password-reset`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, verification_code: code }),
@@ -219,7 +219,7 @@ class ApiService {
   }
 
   async resetPassword(email: string, newPassword: string): Promise<{ success: boolean; message: string }> {
-    const response = await fetch(`${API_BASE_URL}/auth/reset-password`, {
+    const response = await fetch(`${API_BASE_URL}/api/v1/auth/reset-password`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, new_password: newPassword }),
@@ -235,7 +235,7 @@ class ApiService {
 
     try {
       // Verify session is still valid
-      const response = await fetch(`${API_BASE_URL}/auth/me`, {
+      const response = await fetch(`${API_BASE_URL}/api/v1/auth/me`, {
         headers: await this.getHeaders(),
       });
 
@@ -254,7 +254,7 @@ class ApiService {
 
   // Strategy APIs
   async createStrategy(strategy: StrategyConfig): Promise<{ success: boolean; message: string; strategy_id?: string }> {
-    const response = await fetch(`${API_BASE_URL}/strategies/create`, {
+    const response = await fetch(`${API_BASE_URL}/api/v1/strategies/create`, {
       method: 'POST',
       headers: await this.getHeaders(),
       body: JSON.stringify(strategy),
@@ -264,7 +264,7 @@ class ApiService {
   }
 
   async testStrategy(strategyId: string, symbol: string): Promise<BacktestResult> {
-    const response = await fetch(`${API_BASE_URL}/strategies/${strategyId}/test`, {
+    const response = await fetch(`${API_BASE_URL}/api/v1/strategies/${strategyId}/test`, {
       method: 'POST',
       headers: await this.getHeaders(),
       body: JSON.stringify({ symbol }),
@@ -274,7 +274,7 @@ class ApiService {
   }
 
   async getUserStrategies(): Promise<StrategyConfig[]> {
-    const response = await fetch(`${API_BASE_URL}/strategies/my-strategies`, {
+    const response = await fetch(`${API_BASE_URL}/api/v1/strategies/my-strategies`, {
       headers: await this.getHeaders(),
     });
 
@@ -282,12 +282,44 @@ class ApiService {
   }
 
   async activateStrategy(strategyId: string): Promise<{ success: boolean; message: string }> {
-    const response = await fetch(`${API_BASE_URL}/strategies/${strategyId}/activate`, {
+    const response = await fetch(`${API_BASE_URL}/api/v1/strategies/${strategyId}/activate`, {
       method: 'POST',
       headers: await this.getHeaders(),
     });
 
     return await this.handleResponse(response);
+  }
+
+  // Get real-time market data from dashboard
+  async getMarketData(): Promise<any> {
+    const response = await fetch(`${API_BASE_URL}/api/symbols`);
+    return await this.handleResponse(response);
+  }
+
+  // Get current price for a specific symbol from dashboard
+  async getCurrentPrice(symbol: string): Promise<{ price: number; change: number } | null> {
+    try {
+      // First try to get from dashboard WebSocket data via REST endpoint
+      const marketResponse = await fetch(`${API_BASE_URL}/api/signals/${symbol.replace('USDT', '')}`);
+      if (marketResponse.ok) {
+        const data = await marketResponse.json();
+        // If we have recent signal data with price info
+        if (data.signals && data.signals.length > 0) {
+          const latestSignal = data.signals[0];
+          return {
+            price: latestSignal.price || 0,
+            change: latestSignal.change || 0
+          };
+        }
+      }
+      
+      // Fallback: try to connect to WebSocket for live data
+      // This is a simplified approach - in production you'd maintain a persistent connection
+      return null;
+    } catch (error) {
+      console.warn('Failed to get current price from dashboard:', error);
+      return null;
+    }
   }
 
   // Dashboard APIs
@@ -333,7 +365,7 @@ class ApiService {
 
   // User Layout Preferences APIs
   async getUserLayoutPreferences(): Promise<{ asset_order?: string[] }> {
-    const response = await fetch(`${API_BASE_URL}/api/user/layout-preferences`, {
+    const response = await fetch(`${API_BASE_URL}/api/v1/user/layout-preferences`, {
       headers: await this.getHeaders(),
     });
 
@@ -341,7 +373,7 @@ class ApiService {
   }
 
   async saveUserLayoutPreferences(preferences: { asset_order: string[] }): Promise<{ success: boolean }> {
-    const response = await fetch(`${API_BASE_URL}/api/user/layout-preferences`, {
+    const response = await fetch(`${API_BASE_URL}/api/v1/user/layout-preferences`, {
       method: 'POST',
       headers: await this.getHeaders(),
       body: JSON.stringify(preferences),

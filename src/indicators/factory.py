@@ -1,8 +1,76 @@
 import pandas as pd
-import pandas_ta as ta
+import numpy as np
 from loguru import logger
 from src.utils.config import StrategyConfig
-from src.indicators.advanced_indicators import add_all_advanced_indicators
+# Temporarily disabled due to pandas_ta dependency
+# from src.indicators.advanced_indicators import add_all_advanced_indicators
+
+
+def _calculate_rsi(prices: pd.Series, period: int = 14) -> pd.Series:
+    """Calculate RSI manually"""
+    delta = prices.diff()
+    gain = (delta.where(delta > 0, 0)).rolling(window=period).mean()
+    loss = (-delta.where(delta < 0, 0)).rolling(window=period).mean()
+    rs = gain / loss
+    rsi = 100 - (100 / (1 + rs))
+    return rsi
+
+
+def _calculate_bollinger_bands(prices: pd.Series, period: int = 20, std_dev: float = 2.0):
+    """Calculate Bollinger Bands manually"""
+    sma = prices.rolling(window=period).mean()
+    rolling_std = prices.rolling(window=period).std()
+    
+    bb_upper = sma + (rolling_std * std_dev)
+    bb_middle = sma
+    bb_lower = sma - (rolling_std * std_dev)
+    
+    return pd.DataFrame({
+        f'BBL_{period}_{std_dev}': bb_lower,
+        f'BBM_{period}_{std_dev}': bb_middle,
+        f'BBU_{period}_{std_dev}': bb_upper
+    }, index=prices.index)
+
+
+def _calculate_macd(prices: pd.Series, fast: int = 12, slow: int = 26, signal: int = 9):
+    """Calculate MACD manually"""
+    # Calculate exponential moving averages
+    ema_fast = prices.ewm(span=fast).mean()
+    ema_slow = prices.ewm(span=slow).mean()
+    
+    # MACD line
+    macd_line = ema_fast - ema_slow
+    
+    # Signal line
+    macd_signal = macd_line.ewm(span=signal).mean()
+    
+    # Histogram
+    macd_histogram = macd_line - macd_signal
+    
+    return pd.DataFrame({
+        f'MACD_{fast}_{slow}_{signal}': macd_line,
+        f'MACDs_{fast}_{slow}_{signal}': macd_signal,
+        f'MACDh_{fast}_{slow}_{signal}': macd_histogram
+    }, index=prices.index)
+
+
+def _calculate_ema(prices: pd.Series, period: int) -> pd.Series:
+    """Calculate EMA manually"""
+    return prices.ewm(span=period).mean()
+
+
+def _calculate_atr(high: pd.Series, low: pd.Series, close: pd.Series, period: int = 14) -> pd.Series:
+    """Calculate ATR manually"""
+    prev_close = close.shift(1)
+    
+    tr1 = high - low
+    tr2 = abs(high - prev_close)
+    tr3 = abs(low - prev_close)
+    
+    true_range = pd.concat([tr1, tr2, tr3], axis=1).max(axis=1)
+    atr = true_range.rolling(window=period).mean()
+    
+    return atr
 
 
 def add_indicators(df: pd.DataFrame, cfg: StrategyConfig) -> pd.DataFrame:
@@ -20,20 +88,22 @@ def add_indicators(df: pd.DataFrame, cfg: StrategyConfig) -> pd.DataFrame:
             raise ValueError(f"DataFrame must contain '{col}' column")
 
     original_len = len(df)
+    result = df.copy()
 
     # --- Bollinger Bands ---
     logger.debug(f"Computing Bollinger Bands (length={cfg.bollinger.length}, std={cfg.bollinger.std})")
-    bb = ta.bbands(close=df["close"], length=cfg.bollinger.length, std=cfg.bollinger.std)
+    bb = _calculate_bollinger_bands(df["close"], cfg.bollinger.length, cfg.bollinger.std)
+    result = result.join(bb)
 
     # --- MACD ---
     logger.debug(f"Computing MACD (fast={cfg.macd.fast}, slow={cfg.macd.slow}, signal={cfg.macd.signal})")
-    macd = ta.macd(close=df["close"], fast=cfg.macd.fast, slow=cfg.macd.slow, signal=cfg.macd.signal)
+    macd = _calculate_macd(df["close"], cfg.macd.fast, cfg.macd.slow, cfg.macd.signal)
+    result = result.join(macd)
 
     # --- RSI ---
     logger.debug(f"Computing RSI (length={cfg.rsi.length})")
-    rsi = ta.rsi(close=df["close"], length=cfg.rsi.length)
-
-    result = df.join([bb, macd, rsi.rename("RSI")])
+    rsi = _calculate_rsi(df["close"], cfg.rsi.length)
+    result["RSI"] = rsi
 
     # --- İsimleri normalize et ---
     bb_lower_col = f"BBL_{cfg.bollinger.length}_{cfg.bollinger.std}"
@@ -57,24 +127,24 @@ def add_indicators(df: pd.DataFrame, cfg: StrategyConfig) -> pd.DataFrame:
     if getattr(cfg, "filters", None) and getattr(cfg.filters, "ema_trend", None) and cfg.filters.ema_trend.use:
         ema_len = cfg.filters.ema_trend.length
         logger.debug(f"Computing EMA trend filter (length={ema_len})")
-        ema_series = ta.ema(close=result["close"], length=ema_len)
+        ema_series = _calculate_ema(result["close"], ema_len)
         result[f"EMA{ema_len}"] = ema_series
 
     # --- ATR (opsiyonel) ---
     if getattr(cfg, "risk", None) and cfg.risk.use_atr:
         atr_len = cfg.risk.atr_length
         logger.debug(f"Computing ATR (length={atr_len})")
-        atr = ta.atr(high=result["high"], low=result["low"], close=result["close"], length=atr_len)
-        result["ATR"] = atr if isinstance(atr, pd.Series) else atr.iloc[:, 0]
+        atr = _calculate_atr(result["high"], result["low"], result["close"], atr_len)
+        result["ATR"] = atr
     
-    # --- Gelişmiş indikatörler ---
-    logger.debug("Adding advanced indicators for better signal quality...")
-    try:
-        result = add_all_advanced_indicators(result)
-        logger.debug("Successfully added advanced indicators")
-    except Exception as e:
-        logger.warning(f"Failed to add some advanced indicators: {e}")
-        # Continue without advanced indicators if they fail
+    # --- Gelişmiş indikatörler (geçici olarak devre dışı) ---
+    logger.debug("Advanced indicators temporarily disabled due to pandas_ta dependency")
+    # try:
+    #     result = add_all_advanced_indicators(result)
+    #     logger.debug("Successfully added advanced indicators")
+    # except Exception as e:
+    #     logger.warning(f"Failed to add some advanced indicators: {e}")
+    #     # Continue without advanced indicators if they fail
 
     # --- Zorunlu göstergeler mevcut mu? ---
     required = ["BBL", "BBM", "BBU", "MACD", "MACD_SIGNAL", "MACD_HIST", "RSI"]

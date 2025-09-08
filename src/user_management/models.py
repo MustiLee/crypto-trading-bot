@@ -3,7 +3,7 @@ User management models using SQLAlchemy
 """
 
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from sqlalchemy import Column, String, DateTime, Boolean, Text, Integer, Float, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.declarative import declarative_base
@@ -63,7 +63,7 @@ class User(Base):
         self.email_verification_token = code
         # Token expires in 24 hours
         self.email_verification_expires = datetime.utcnow().replace(tzinfo=timezone.utc) + \
-                                          datetime.timedelta(hours=24)
+                                          timedelta(hours=24)
         return self.email_verification_token
     
     def generate_password_reset_token(self) -> str:
@@ -71,7 +71,7 @@ class User(Base):
         self.password_reset_token = secrets.token_urlsafe(32)
         # Token expires in 1 hour
         self.password_reset_expires = datetime.utcnow().replace(tzinfo=timezone.utc) + \
-                                      datetime.timedelta(hours=1)
+                                      timedelta(hours=1)
         return self.password_reset_token
     
     def verify_email_token(self, token: str) -> bool:
@@ -139,7 +139,7 @@ class UserSession(Base):
         session = cls(
             user_id=user_id,
             session_token=secrets.token_urlsafe(32),
-            expires_at=datetime.utcnow().replace(tzinfo=timezone.utc) + datetime.timedelta(hours=expires_hours)
+            expires_at=datetime.utcnow().replace(tzinfo=timezone.utc) + timedelta(hours=expires_hours)
         )
         return session
     

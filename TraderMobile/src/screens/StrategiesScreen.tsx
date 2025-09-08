@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -12,9 +12,10 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from '../context/AuthContext';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../types';
+import { apiService } from '../services/api';
 
 type StrategiesNavigationProp = StackNavigationProp<RootStackParamList>;
 
@@ -133,21 +134,57 @@ const StrategiesScreen: React.FC = () => {
     }
   ];
 
+  // Load strategies on component mount
   useEffect(() => {
     loadStrategies();
-  }, []);
+  }, [user]);
 
-  const loadStrategies = () => {
-    // Simulate API call
-    setTimeout(() => {
-      setStrategies(mockStrategies);
-    }, 500);
+  // Refresh strategies when screen comes into focus (e.g., after creating a new strategy)
+  useFocusEffect(
+    useCallback(() => {
+      if (user) {
+        loadStrategies();
+      }
+    }, [user])
+  );
+
+  const loadStrategies = async () => {
+    if (!user) {
+      setStrategies([]);
+      return;
+    }
+
+    try {
+      const result = await apiService.getUserStrategies();
+      if (result.success && result.data) {
+        // Convert API response to Strategy interface format
+        const apiStrategies = result.data.map((strategy: any) => ({
+          id: strategy.id,
+          name: strategy.name,
+          description: strategy.description || 'Açıklama yok',
+          type: 'custom' as const,
+          isActive: strategy.is_active,
+          createdAt: strategy.created_at,
+          performance: {
+            totalReturn: Math.random() * 20 - 5, // Mock performance data
+            winRate: Math.random() * 40 + 50,
+            maxDrawdown: Math.random() * 10 + 5
+          }
+        }));
+        setStrategies(apiStrategies);
+      } else {
+        console.error('Failed to load strategies:', result.message);
+        setStrategies([]);
+      }
+    } catch (error) {
+      console.error('Error loading strategies:', error);
+      setStrategies([]);
+    }
   };
 
   const onRefresh = async () => {
     setIsRefreshing(true);
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    loadStrategies();
+    await loadStrategies();
     setIsRefreshing(false);
   };
 

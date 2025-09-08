@@ -3,7 +3,7 @@ import pandas as pd
 from datetime import datetime, timezone
 from typing import Dict, Optional, List
 from loguru import logger
-import pandas_ta as ta
+# import pandas_ta as ta  # Temporarily disabled
 from enum import Enum
 import json
 
@@ -370,27 +370,20 @@ class LiveSignalGenerator:
             if len(df) == 0:
                 return pd.DataFrame()
             
-            # Calculate Bollinger Bands
-            bb = df.ta.bbands(length=self.strategy.bollinger.length, 
-                             std=self.strategy.bollinger.std)
-            
-            # Calculate MACD
-            macd = df.ta.macd(fast=self.strategy.macd.fast, 
-                             slow=self.strategy.macd.slow, 
-                             signal=self.strategy.macd.signal)
-            
-            # Calculate RSI
-            rsi = df.ta.rsi(length=self.strategy.rsi.length)
+            # Manual indicator calculations (replacement for pandas_ta)
+            bb = self._calculate_bollinger_bands(df, self.strategy.bollinger.length, self.strategy.bollinger.std)
+            macd = self._calculate_macd(df, self.strategy.macd.fast, self.strategy.macd.slow, self.strategy.macd.signal)
+            rsi = self._calculate_rsi(df, self.strategy.rsi.length)
             
             # Calculate ATR if needed
             atr = None
             if self.strategy.risk.use_atr:
-                atr = df.ta.atr(length=self.strategy.risk.atr_length)
+                atr = self._calculate_atr(df, self.strategy.risk.atr_length)
             
             # Calculate EMA if needed for trend filter
             ema_trend = None
             if hasattr(self.strategy, 'filters') and hasattr(self.strategy.filters, 'ema_trend') and self.strategy.filters.ema_trend.use:
-                ema_trend = df.ta.ema(length=self.strategy.filters.ema_trend.length)
+                ema_trend = self._calculate_ema(df['close'], self.strategy.filters.ema_trend.length)
             
             # Combine all indicators
             result = df.copy()
@@ -602,6 +595,86 @@ class LiveSignalGenerator:
         except Exception as e:
             logger.error(f"Error notifying indicator update: {e}")
     
+    def _calculate_ema(self, prices: pd.Series, period: int) -> pd.Series:
+        """Calculate Exponential Moving Average"""
+        return prices.ewm(span=period, adjust=False).mean()
+    
+    def _calculate_sma(self, prices: pd.Series, period: int) -> pd.Series:
+        """Calculate Simple Moving Average"""
+        return prices.rolling(window=period).mean()
+    
+    def _calculate_rsi(self, df: pd.DataFrame, period: int = 14) -> pd.Series:
+        """Calculate RSI manually"""
+        try:
+            close = df['close']
+            delta = close.diff()
+            gain = (delta.where(delta > 0, 0)).rolling(window=period).mean()
+            loss = (-delta.where(delta < 0, 0)).rolling(window=period).mean()
+            rs = gain / loss
+            rsi = 100 - (100 / (1 + rs))
+            return rsi
+        except Exception as e:
+            logger.warning(f"RSI calculation error: {e}")
+            return pd.Series(index=df.index, dtype=float)
+    
+    def _calculate_bollinger_bands(self, df: pd.DataFrame, period: int = 20, std_dev: float = 2.0) -> pd.DataFrame:
+        """Calculate Bollinger Bands manually"""
+        try:
+            close = df['close']
+            sma = self._calculate_sma(close, period)
+            rolling_std = close.rolling(window=period).std()
+            
+            bb_data = pd.DataFrame(index=df.index)
+            bb_data[f'BBL_{period}_{std_dev}'] = sma - (rolling_std * std_dev)
+            bb_data[f'BBM_{period}_{std_dev}'] = sma
+            bb_data[f'BBU_{period}_{std_dev}'] = sma + (rolling_std * std_dev)
+            
+            return bb_data
+        except Exception as e:
+            logger.warning(f"Bollinger Bands calculation error: {e}")
+            return pd.DataFrame(index=df.index)
+    
+    def _calculate_macd(self, df: pd.DataFrame, fast: int = 12, slow: int = 26, signal: int = 9) -> pd.DataFrame:
+        """Calculate MACD manually"""
+        try:
+            close = df['close']
+            exp1 = self._calculate_ema(close, fast)
+            exp2 = self._calculate_ema(close, slow)
+            
+            macd_line = exp1 - exp2
+            signal_line = self._calculate_ema(macd_line, signal)
+            histogram = macd_line - signal_line
+            
+            macd_data = pd.DataFrame(index=df.index)
+            macd_data[f'MACD_{fast}_{slow}_{signal}'] = macd_line
+            macd_data[f'MACDs_{fast}_{slow}_{signal}'] = signal_line
+            macd_data[f'MACDh_{fast}_{slow}_{signal}'] = histogram
+            
+            return macd_data
+        except Exception as e:
+            logger.warning(f"MACD calculation error: {e}")
+            return pd.DataFrame(index=df.index)
+    
+    def _calculate_atr(self, df: pd.DataFrame, period: int = 14) -> pd.Series:
+        """Calculate Average True Range manually"""
+        try:
+            high = df['high']
+            low = df['low']
+            close = df['close']
+            prev_close = close.shift(1)
+            
+            tr1 = high - low
+            tr2 = abs(high - prev_close)
+            tr3 = abs(low - prev_close)
+            
+            true_range = pd.concat([tr1, tr2, tr3], axis=1).max(axis=1)
+            atr = true_range.rolling(window=period).mean()
+            
+            return atr
+        except Exception as e:
+            logger.warning(f"ATR calculation error: {e}")
+            return pd.Series(index=df.index, dtype=float)
+
     def _get_bb_position(self, row) -> str:
         """Get price position relative to Bollinger Bands"""
         try:

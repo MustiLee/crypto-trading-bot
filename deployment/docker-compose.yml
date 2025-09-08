@@ -48,6 +48,9 @@ services:
       # Enable auto-reload in development (set to 'false' in production)
       UVICORN_RELOAD: "true"
       
+      # Authentication configuration
+      AUTH_TEST_MODE: "true"
+      
       # Python configuration
       PYTHONPATH: /app
       PYTHONUNBUFFERED: 1

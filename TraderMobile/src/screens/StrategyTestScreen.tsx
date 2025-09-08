@@ -16,6 +16,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList, BacktestResult, StrategyConfig } from '../types';
 import { apiService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { usePrices } from '../context/PriceContext';
 
 type StrategyTestRouteProp = RouteProp<RootStackParamList, 'StrategyTest'>;
 type StrategyTestNavigationProp = StackNavigationProp<RootStackParamList, 'StrategyTest'>;
@@ -24,6 +25,7 @@ const StrategyTestScreen: React.FC = () => {
   const route = useRoute<StrategyTestRouteProp>();
   const navigation = useNavigation<StrategyTestNavigationProp>();
   const { user } = useAuth();
+  const { getPrice, isConnected } = usePrices();
   const { symbol, displayName } = route.params;
 
   // Strategy parameters - more compact
@@ -42,32 +44,61 @@ const StrategyTestScreen: React.FC = () => {
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [strategyName, setStrategyName] = useState('');
   const [description, setDescription] = useState('');
+  const [isStrategyNameInitialized, setIsStrategyNameInitialized] = useState(false);
   
   const [isLoading, setIsLoading] = useState(false);
   const [backtestResult, setBacktestResult] = useState<BacktestResult | null>(null);
   const [currentPrice, setCurrentPrice] = useState<number>(0);
   const [priceChange24h, setPriceChange24h] = useState<number>(0);
 
-  // Mock price data
-  const mockPrices: { [key: string]: { price: number; change: number } } = {
-    'BTCUSDT': { price: 110250.00, change: 2.34 },
-    'ETHUSDT': { price: 2847.50, change: 1.89 },
-    'XRPUSDT': { price: 0.6234, change: -1.23 },
-    'BNBUSDT': { price: 645.80, change: 0.87 },
-    'ADAUSDT': { price: 0.4521, change: 3.45 },
-    'SOLUSDT': { price: 178.90, change: -0.56 },
-    'DOTUSDT': { price: 8.45, change: 1.67 },
-    'POLUSDT': { price: 0.8934, change: 2.11 },
-    'AVAXUSDT': { price: 42.15, change: -2.34 },
-    'LINKUSDT': { price: 23.67, change: 1.45 },
+  // Get real-time price data from dashboard WebSocket
+  const updatePriceFromDashboard = () => {
+    const priceData = getPrice(symbol);
+    
+    if (priceData && priceData.price > 0) {
+      // Use real-time data from dashboard
+      setCurrentPrice(priceData.price);
+      setPriceChange24h(priceData.change);
+      console.log(`Updated ${symbol} price from dashboard: $${priceData.price}, change: ${priceData.change}%`);
+    } else if (!isConnected) {
+      // Only use external API if dashboard connection is not available
+      console.log(`Dashboard not connected for ${symbol}, trying external API...`);
+      fetchExternalPrice();
+    }
   };
 
+  // Fallback to external API if dashboard is not available
+  const fetchExternalPrice = async () => {
+    try {
+      const response = await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${symbol}`);
+      if (response.ok) {
+        const data = await response.json();
+        setCurrentPrice(parseFloat(data.lastPrice));
+        setPriceChange24h(parseFloat(data.priceChangePercent));
+        console.log(`Updated ${symbol} price from external API: $${data.lastPrice}`);
+      }
+    } catch (error) {
+      console.warn(`Failed to fetch external price for ${symbol}:`, error);
+    }
+  };
+
+  // Set strategy name only once when component mounts
   useEffect(() => {
-    const priceData = mockPrices[symbol] || mockPrices['BTCUSDT'];
-    setCurrentPrice(priceData.price);
-    setPriceChange24h(priceData.change);
-    setStrategyName(`${displayName} Strategy`);
-  }, [symbol, displayName]);
+    if (!isStrategyNameInitialized) {
+      setStrategyName(`${displayName} Strategy`);
+      setIsStrategyNameInitialized(true);
+    }
+  }, [displayName, isStrategyNameInitialized]);
+
+  // Handle price updates separately
+  useEffect(() => {
+    updatePriceFromDashboard();
+
+    // Update price every 5 seconds from dashboard or fallback
+    const priceInterval = setInterval(updatePriceFromDashboard, 5000);
+    
+    return () => clearInterval(priceInterval);
+  }, [symbol, displayName, getPrice, isConnected]);
 
   const updateParameter = (key: string, value: string) => {
     setParameters(prev => ({ ...prev, [key]: value }));
@@ -127,23 +158,36 @@ const StrategyTestScreen: React.FC = () => {
     
     try {
       setIsLoading(true);
-      const strategy: StrategyConfig = {
+      const strategyConfig: StrategyConfig = {
         name: strategyName.trim(),
         description: description.trim() || `${displayName} için otomatik oluşturulan strateji`,
         parameters: parameters
       };
       
-      // Mock save - in real app would call API
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Save strategy via API
+      console.log('Saving strategy:', strategyConfig);
+      const result = await apiService.createStrategy(strategyConfig);
       
-      Alert.alert('Başarılı', 'Strateji kaydedildi', [
-        { text: 'Tamam', onPress: () => {
-          setShowSaveModal(false);
-          navigation.goBack();
-        }}
-      ]);
+      if (result.success) {
+        Alert.alert('Başarılı', 'Strateji başarıyla kaydedildi', [
+          { text: 'Geri Dön', onPress: () => {
+            setShowSaveModal(false);
+            navigation.goBack();
+          }},
+          { text: 'Stratejileri Gör', onPress: () => {
+            setShowSaveModal(false);
+            navigation.navigate('MainTabs', { screen: 'Strategies' });
+          }}
+        ]);
+      } else {
+        Alert.alert('Hata', result.message || 'Strateji kaydedilemedi');
+      }
     } catch (error) {
-      Alert.alert('Hata', 'Strateji kaydedilemedi');
+      console.error('Strategy save error:', error);
+      Alert.alert(
+        'Hata', 
+        error instanceof Error ? error.message : 'Strateji kaydedilemedi. Lütfen tekrar deneyin.'
+      );
     } finally {
       setIsLoading(false);
     }
@@ -206,6 +250,9 @@ const StrategyTestScreen: React.FC = () => {
             <Text style={[styles.priceChange, { color: priceChange24h >= 0 ? '#10b981' : '#ef4444' }]}>
               {' '}({priceChange24h >= 0 ? '+' : ''}{priceChange24h.toFixed(2)}%)
             </Text>
+          </Text>
+          <Text style={[styles.connectionStatus, { color: isConnected ? '#10b981' : '#ef4444' }]}>
+            {isConnected ? '🟢 Dashboard Connected' : '🔴 Dashboard Offline'}
           </Text>
         </View>
 
@@ -475,6 +522,12 @@ const styles = StyleSheet.create({
   },
   priceChange: {
     fontSize: 16,
+  },
+  connectionStatus: {
+    fontSize: 12,
+    fontWeight: '600',
+    marginTop: 8,
+    textAlign: 'center',
   },
   section: {
     backgroundColor: 'rgba(255, 255, 255, 0.95)',

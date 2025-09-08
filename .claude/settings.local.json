@@ -71,7 +71,10 @@
       "Bash(npm install:*)",
       "Bash(npx expo start:*)",
       "Read(/Users/mustafayildirim/Documents/**)",
-      "Read(/Users/mustafayildirim/Documents/**)"
+      "Read(/Users/mustafayildirim/Documents/**)",
+      "Read(//Users/mustafayildirim/Documents/**)",
+      "Bash(find:*)",
+      "Bash(node:*)"
     ],
     "deny": [],
     "ask": []
